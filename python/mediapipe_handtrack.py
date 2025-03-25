@@ -5,6 +5,7 @@ import time
 import mediapipe as mp
 import numpy as np
 import cv2
+from udp_module import send_data
 
 #ADD HERE, GITHUB LINK FOR REPO THIS WAS BUILT WITH
 
@@ -78,6 +79,8 @@ def main():
     results = hands.process(frame)
     frame.flags.writeable = True
 
+    previous_gesture = None
+
     if results.multi_hand_landmarks is not None:
       for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
                                                 results.multi_handedness):
@@ -85,13 +88,16 @@ def main():
         brect = calc_bounding_rect(debug_frame, hand_landmarks)
         landmark_list = calc_landmark_list(debug_frame, hand_landmarks)
         # Gestures determined manually for now
-        gesture = extract_gesture(hand_landmarks.landmark)
+        gesture, bit_value = extract_gesture(hand_landmarks.landmark)
         #draw bounding box and hand landmarks
         debug_frame = draw_bounding_rect(use_brect, debug_frame, brect)
         debug_frame = draw_landmarks(debug_frame, landmark_list)
-  
+        
+        if previous_gesture != gesture and gesture != "UNKNOWN":
+          print(gesture)
+          send_data(bit_value)
+          previous_gesture = gesture
 
-        print(gesture)
     # COMMENT OUT WHEN RUNNING ON BOARD!
     latency = time.time() - start_latency
     debug_frame = draw_debug_info(debug_frame, latency, gesture)
@@ -443,21 +449,21 @@ def extract_gesture(landmarks):
   #for testing overlapping conditions. If overlap found, adjust the thresholds
   print(open_hand, thumb_index, thumb_middle, thumb_ring, thumb_pinky, index_middle_thumb, fingers_touching)
   if open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "OPEN_HAND"
+    return "OPEN_HAND", int('0000', 2)
   if thumb_index and not open_hand and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_INDEX"
+    return "THUMB_INDEX", int('1000', 2)
   if thumb_middle and not open_hand and not thumb_index and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_MIDDLE"
+    return "THUMB_MIDDLE", int('0100', 2)
   if thumb_ring and not open_hand and not thumb_index and not thumb_middle and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_RING"
+    return "THUMB_RING", int('0010', 2)
   if thumb_pinky and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not index_middle_thumb and not fingers_touching:
-    return "THUMB_PINKY"
+    return "THUMB_PINKY", int('0001', 2)
   if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
-    return "INDEX_MIDDLE_THUMB"
+    return "INDEX_MIDDLE_THUMB", int('0101', 2)
   if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
-    return "FINGERS_TOUCHING"
+    return "FINGERS_TOUCHING", None
   #if no gesture can be determined
-  return "UNKNOWN"
+  return "UNKNOWN", None
 
 
 if __name__=="__main__":

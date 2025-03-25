@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "hand_commands.h"
 
 #define UDP_PORT 12345
 #define MAX_BUFFER_SIZE 1600 
@@ -90,31 +91,27 @@ static void process_string(const char *cmd)
         prev_cmd[CMD_SIZE - 1] = '\0';
 
         if (strcasecmp(cmd, "0000") == 0) {
-            printf("OPEN_HAND\n");
+            process_0000();
         } 
 
         if (strcasecmp(cmd, "1000") == 0) { 
-            printf("THUMB_INDEX\n");
+            process_1000();
         } 
 
         if (strcasecmp(cmd, "0100") == 0) {
-            printf("THUMB_MIDDLE\n");
+            process_0100();
         } 
 
         if (strcasecmp(cmd, "0010") == 0) {
-            printf("THUMB_RING\n");
+            process_0010();
         } 
 
         if (strcasecmp(cmd, "0001") == 0) {
-            printf("THUMB_PINKY\n");
+            process_0001();
         } 
 
         if (strcasecmp(cmd, "0101") == 0) {
-            printf("INDEX_MIDDLE_THUMB\n");
-        } 
-
-        if (strcasecmp(cmd, "Placeholder") == 0) {
-            printf("FINGERS_TOUCHING\n");
+            process_0101();
         } 
 
         if (strcasecmp(cmd, "stop") == 0) {
@@ -123,10 +120,7 @@ static void process_string(const char *cmd)
             send_response(buffer);
             end_program = true;
         } 
-
-        printf("Received command: %s\n", cmd);
     }
-
 }
 
 void udp_cleanup(void) 

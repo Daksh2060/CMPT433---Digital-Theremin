@@ -12,6 +12,10 @@
 #define UDP_PORT 12345
 #define MAX_BUFFER_SIZE 1600 
 
+#define CMD_SIZE 128
+
+char prev_cmd[CMD_SIZE] = "";
+
 static int socket_descriptor;
 static pthread_t udp_thread;
 
@@ -80,24 +84,22 @@ static void *udp_listener(void *arg)
     return NULL;
 }
 
-#define CMD_SIZE 128
-char prev_cmd[CMD_SIZE] = "";
-
 static void process_string(const char *cmd) 
 {
-    
     if (strcasecmp(cmd, prev_cmd) != 0) {
         strncpy(prev_cmd, cmd, CMD_SIZE - 1); 
         prev_cmd[CMD_SIZE - 1] = '\0';
+
+        if (strcasecmp(cmd, "stop") == 0) {
+            char buffer[CMD_SIZE];
+            snprintf(buffer, sizeof(buffer), "Terminating Program.");
+            send_response(buffer);
+            end_program = true;
+        } 
+
         printf("Received command: %s\n", cmd);
     }
 
-    if (strcasecmp(cmd, "stop") == 0) {
-        char buffer[CMD_SIZE];
-        snprintf(buffer, sizeof(buffer), "Terminating Program.");
-        send_response(buffer);
-        end_program = true;
-    } 
 }
 
 void udp_cleanup(void) 

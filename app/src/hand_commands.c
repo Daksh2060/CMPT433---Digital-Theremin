@@ -1,34 +1,61 @@
 #include "hand_commands.h"
 #include <stdio.h>
-#include <string.h>
-//#include "sine_mixer.h"
+#include <pthread.h>
+#include <unistd.h>
 
-void process_0000(){
+static volatile int command = -1;       
+static pthread_mutex_t lock;            
+static pthread_t thread;             
 
-    printf("OPEN_HAND\n");
+static void process_command(int cmd);
+static void* command_thread(void* arg); 
+
+
+void command_handler_init() 
+{
+    pthread_mutex_init(&lock, NULL);
+
+    if (pthread_create(&thread, NULL, command_thread, NULL) != 0) {
+        perror("Failed to create command thread");
+    }
 }
 
-void process_1000(){
 
-    printf("THUMB_INDEX\n");
+void update_current_command(int cmd) 
+{
+    pthread_mutex_lock(&lock);
+    {
+        command = cmd; 
+    }                       
+    pthread_mutex_unlock(&lock);
 }
 
-void process_0100(){
 
-    printf("THUMB_MIDDLE\n");
+void command_handler_cleanup() 
+{
+    pthread_cancel(thread);     
+    pthread_join(thread, NULL);       
+    pthread_mutex_destroy(&lock);      
 }
 
-void process_0010(){
-    
-    printf("THUMB_RING\n");
+
+static void process_command(int cmd) 
+{
+    printf("Executing command: %d\n", cmd);
+    command = -1;
 }
 
-void process_0001(){
-    
-    printf("THUMB_PINKY\n");
-}
 
-void process_0101(){
-    
-    printf("INDEX_MIDDLE_THUMB\n");
+static void* command_thread(void* arg) 
+{
+    while (1) {
+        if (command != -1) {
+            pthread_mutex_lock(&lock);
+            {
+                process_command(command);
+            }  
+            pthread_mutex_unlock(&lock);
+        }
+    }
+    return NULL;
 }

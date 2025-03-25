@@ -26,20 +26,6 @@ static socklen_t addr_len = sizeof(client_addr);
 static volatile bool running = true;
 volatile bool end_program = false;
 
-typedef struct {
-    const char *cmd;
-    void (*handler)(void);
-} CommandHandler;
-
-CommandHandler handlers[] = {
-    {"0000", process_0000},
-    {"1000", process_1000},
-    {"0100", process_0100},
-    {"0010", process_0010},
-    {"0001", process_0001},
-    {"0101", process_0101}
-};
-
 static void *udp_listener(void *arg);
 static void process_string(const char *cmd);
 
@@ -105,21 +91,10 @@ static void process_string(const char *cmd)
         strncpy(prev_cmd, cmd, CMD_SIZE - 1);
         prev_cmd[CMD_SIZE - 1] = '\0';
 
-        bool matched = false;
-        for (size_t i = 0; i < NUM_HANDLERS; i++) {
-            if (strcasecmp(cmd, handlers[i].cmd) == 0) {
-                handlers[i].handler();
-                matched = true;
-                break;
-            }
-        }
+        char *endptr;
+        int value = strtol(cmd, &endptr, 2);
 
-        if (strcasecmp(cmd, "stop") == 0) {
-            char buffer[CMD_SIZE];
-            snprintf(buffer, sizeof(buffer), "Terminating Program.");
-            send_response(buffer);
-            end_program = true;
-        } 
+        update_current_command(value);
     }
 }
 

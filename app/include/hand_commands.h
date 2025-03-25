@@ -1,16 +1,13 @@
 #ifndef _HAND_COMMANDS_H_
 #define _HAND_COMMANDS_H_
 
-void process_0000();
+#include <stdio.h>
+#include <unistd.h>           
 
-void process_1000();
+void command_handler_init();
 
-void process_0100();
+void update_current_command(int cmd);
 
-void process_0010();
-
-void process_0001();
-
-void process_0101();
+void command_handler_cleanup();
 
 #endif

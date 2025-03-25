@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <stdio.h>
 
-
 #define UDP_PORT 12345
 #define MAX_BUFFER_SIZE 1600 
 

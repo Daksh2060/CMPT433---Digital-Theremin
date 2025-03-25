@@ -399,69 +399,50 @@ def extract_gesture(landmarks):
   # Check for index and thumb touching
   thumb_index = (
     # Checks that index and thumb are touching
-    distance(thumb_tip, index_tip) < 0.1 and
+    distance(thumb_tip, index_tip) < 0.1
     # checks that other fingers are open
-    distance(middle_tip, wrist)  > 1.25 * palm_height and
-    distance(ring_tip, wrist) > 1.25 * palm_height and
-    distance(pinky_tip, wrist) > 1.25 * palm_height
   )
   # Middle finger and thumb touching
   thumb_middle = (
-    distance(thumb_tip, middle_tip) < 0.1 and
-    distance(index_tip, wrist) > 1.25 * palm_height and
-    distance(ring_tip, wrist) > 1.25 * palm_height and
-    distance(pinky_tip, wrist) > 1.25 * palm_height 
+    distance(thumb_tip, middle_tip) < 0.1 
   )
   # Ring finger and thumb touching 
   thumb_ring = (
-    distance(thumb_tip, ring_tip) < 0.1 and
-    distance(index_tip, wrist) > 1.25 * palm_height and
-    distance(middle_tip, wrist) > 1.25 * palm_height and
-    distance(pinky_tip, wrist) > 1.25 * palm_height
+    distance(thumb_tip, ring_tip) < 0.1
   )
 
   # Pinky and thumb touching
   thumb_pinky = (
-    distance(thumb_tip, pinky_tip) < 0.1 and
-    distance(index_tip, wrist) > 1.25 * palm_height and
-    distance(middle_tip, wrist) > 1.25 * palm_height and
-    #slightly lower threshold, ring finger usually isnt perfectly straight in this situation
-    distance(ring_tip, wrist) > 1.15 * palm_height
+    distance(thumb_tip, pinky_tip) < 0.1 
   )
 
-  # Index + middle touching thumb
-  index_middle_thumb = (
-    distance(thumb_tip, index_tip) < 0.1 and
-    distance(thumb_tip, middle_tip) < 0.1 and
-    #slightly lower threshold 
-    distance(ring_tip, wrist) > 1.15 * palm_height and
-    distance(pinky_tip, wrist) > 1.15 * palm_height
-  )
+  bit_index = 0b1000 if thumb_index else 0b0000
+  bit_middle = 0b0100 if thumb_middle else 0b0000
+  bit_ring = 0b0010 if thumb_ring else 0b0000
+  bit_pinky = 0b0001 if thumb_pinky else 0b0000
 
-  # All fingers touching
-  # overlaps with open hand so the condition is slightly different. Just checks that the fingers are all close
-  fingers_touching = (
-    distance(thumb_tip, index_tip) < 0.1 and
-    distance(index_tip, middle_tip) < 0.1 and
-    distance(middle_tip, ring_tip) < 0.1 and
-    distance(ring_tip, pinky_tip) < 0.1
-  )
+  touching_fingers = bit_index | bit_middle | bit_pinky | bit_ring
+
   #for testing overlapping conditions. If overlap found, adjust the thresholds
-  print(open_hand, thumb_index, thumb_middle, thumb_ring, thumb_pinky, index_middle_thumb, fingers_touching)
-  if open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "OPEN_HAND", "0000"
-  if thumb_index and not open_hand and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_INDEX", "1000"
-  if thumb_middle and not open_hand and not thumb_index and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_MIDDLE", "0100"
-  if thumb_ring and not open_hand and not thumb_index and not thumb_middle and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_RING", "0010"
-  if thumb_pinky and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not index_middle_thumb and not fingers_touching:
-    return "THUMB_PINKY", "0001"
-  if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
-    return "INDEX_MIDDLE_THUMB", "0101"
-  if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
-    return "FINGERS_TOUCHING", "Placeholder hehe sorry Dave ;) "
+  print("{0:b}".format(touching_fingers))
+  if(touching_fingers == 0):
+      return "OPEN_HAND", "0000"
+  else:
+      return "FINGER_THUMB", str(touching_fingers)
+#   if open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
+#     return "OPEN_HAND", "0000"
+#   if thumb_index and not open_hand and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
+#     return "THUMB_INDEX", "1000"
+#   if thumb_middle and not open_hand and not thumb_index and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
+#     return "THUMB_MIDDLE", "0100"
+#   if thumb_ring and not open_hand and not thumb_index and not thumb_middle and not thumb_pinky and not index_middle_thumb and not fingers_touching:
+#     return "THUMB_RING", "0010"
+#   if thumb_pinky and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not index_middle_thumb and not fingers_touching:
+#     return "THUMB_PINKY", "0001"
+#   if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
+#     return "INDEX_MIDDLE_THUMB", "0101"
+#   if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
+#     return "FINGERS_TOUCHING", "Placeholder hehe sorry Dave ;) "
   #if no gesture can be determined
   return "UNKNOWN", "UNKNOWN"
 

@@ -45,8 +45,10 @@ def main():
   
   # Camera preparation 
   cap = cv2.VideoCapture(cap_device)
+  cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')) #comment out if there are any issues
   cap.set(cv2.CAP_PROP_FRAME_WIDTH, cap_width)
   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, cap_height)
+  time.sleep(1)
 
   # Load Model 
   mp_hands = mp.solutions.hands

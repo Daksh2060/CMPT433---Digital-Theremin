@@ -374,16 +374,6 @@ def extract_gesture(landmarks):
   palm_center = Point(palm_center_x, palm_center_y)
 
   
-  # Check for closed fist
-  closed_fist = (
-    # Check that fingers are closed
-    distance(thumb_tip, palm_center)    < (palm_height / 2.0) and
-    distance(index_tip, wrist)          < 0.85 * palm_height  and
-    distance(middle_tip, wrist)         < 0.85 * palm_height  and
-    distance(ring_tip, wrist)           < 0.85 * palm_height  and
-    distance(pinky_tip, wrist)          < 0.85 * palm_height
-  )
-  
   # Check for open hand
   open_hand = (
     # Check that fingers are open and straight
@@ -407,14 +397,14 @@ def extract_gesture(landmarks):
     distance(ring_tip, wrist) > 1.25 * palm_height and
     distance(pinky_tip, wrist) > 1.25 * palm_height
   )
-  
+  # Middle finger and thumb touching
   thumb_middle = (
     distance(thumb_tip, middle_tip) < 0.1 and
     distance(index_tip, wrist) > 1.25 * palm_height and
     distance(ring_tip, wrist) > 1.25 * palm_height and
     distance(pinky_tip, wrist) > 1.25 * palm_height 
   )
-
+  # Ring finger and thumb touching 
   thumb_ring = (
     distance(thumb_tip, ring_tip) < 0.1 and
     distance(index_tip, wrist) > 1.25 * palm_height and
@@ -422,18 +412,48 @@ def extract_gesture(landmarks):
     distance(pinky_tip, wrist) > 1.25 * palm_height
   )
 
-  print(closed_fist, open_hand, thumb_index, thumb_middle, thumb_ring)
-  if closed_fist and not open_hand and not thumb_index and not thumb_middle and not thumb_ring:
-    return "CLOSED FIST"
-  if open_hand and not closed_fist and not thumb_index and not thumb_middle and not thumb_ring:
+  # Pinky and thumb touching
+  thumb_pinky = (
+    distance(thumb_tip, pinky_tip) < 0.1 and
+    distance(index_tip, wrist) > 1.25 * palm_height and
+    distance(middle_tip, wrist) > 1.25 * palm_height and
+    #slightly lower threshold, ring finger usually isnt perfectly straight in this situation
+    distance(ring_tip, wrist) > 1.15 * palm_height
+  )
+
+  # Index + middle touching thumb
+  index_middle_thumb = (
+    distance(thumb_tip, index_tip) < 0.1 and
+    distance(thumb_tip, middle_tip) < 0.1 and
+    #slightly lower threshold 
+    distance(ring_tip, wrist) > 1.15 * palm_height and
+    distance(pinky_tip, wrist) > 1.15 * palm_height
+  )
+
+  # All fingers touching
+  # overlaps with open hand so the condition is slightly different. Just checks that the fingers are all close
+  fingers_touching = (
+    distance(thumb_tip, index_tip) < 0.1 and
+    distance(index_tip, middle_tip) < 0.1 and
+    distance(middle_tip, ring_tip) < 0.1 and
+    distance(ring_tip, pinky_tip) < 0.1
+  )
+  #for testing overlapping conditions. If overlap found, adjust the thresholds
+  print(open_hand, thumb_index, thumb_middle, thumb_ring, thumb_pinky, index_middle_thumb, fingers_touching)
+  if open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
     return "OPEN_HAND"
-  if thumb_index and not closed_fist and not open_hand and not thumb_middle and not thumb_ring:
+  if thumb_index and not open_hand and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
     return "THUMB_INDEX"
-  if thumb_middle and not closed_fist and not open_hand and not thumb_index and not thumb_ring:
+  if thumb_middle and not open_hand and not thumb_index and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
     return "THUMB_MIDDLE"
-  if thumb_ring and not closed_fist and not open_hand and not thumb_index and not thumb_middle:
+  if thumb_ring and not open_hand and not thumb_index and not thumb_middle and not thumb_pinky and not index_middle_thumb and not fingers_touching:
     return "THUMB_RING"
-  
+  if thumb_pinky and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not index_middle_thumb and not fingers_touching:
+    return "THUMB_PINKY"
+  if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
+    return "INDEX_MIDDLE_THUMB"
+  if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
+    return "FINGERS_TOUCHING"
   #if no gesture can be determined
   return "UNKNOWN"
 

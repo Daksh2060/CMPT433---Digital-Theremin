@@ -80,13 +80,21 @@ static void *udp_listener(void *arg)
     return NULL;
 }
 
+#define CMD_SIZE 128
+char prev_cmd[CMD_SIZE] = "";
+
 static void process_string(const char *cmd) 
 {
-    printf("Received string: %s\n", cmd);
     
+    if (strcasecmp(cmd, prev_cmd) != 0) {
+        strncpy(prev_cmd, cmd, CMD_SIZE - 1); 
+        prev_cmd[CMD_SIZE - 1] = '\0';
+        printf("Received command: %s\n", cmd);
+    }
+
     if (strcasecmp(cmd, "stop") == 0) {
-        char buffer[128];
-        snprintf(buffer, sizeof(buffer), "Terminating Program.\n");
+        char buffer[CMD_SIZE];
+        snprintf(buffer, sizeof(buffer), "Terminating Program.");
         send_response(buffer);
         end_program = true;
     } 
@@ -100,9 +108,10 @@ void udp_cleanup(void)
     close(socket_descriptor);
 }
 
-int main() {
+int main()
+{
     udp_init();
-    while (!end_program) {
+    while (1) {
         sleep(1);
     }
     udp_cleanup();

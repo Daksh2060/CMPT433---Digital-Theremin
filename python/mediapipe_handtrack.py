@@ -449,21 +449,21 @@ def extract_gesture(landmarks):
   #for testing overlapping conditions. If overlap found, adjust the thresholds
   print(open_hand, thumb_index, thumb_middle, thumb_ring, thumb_pinky, index_middle_thumb, fingers_touching)
   if open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "OPEN_HAND", int('0000', 2)
+    return "OPEN_HAND", "0000"
   if thumb_index and not open_hand and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_INDEX", int('1000', 2)
+    return "THUMB_INDEX", "1000"
   if thumb_middle and not open_hand and not thumb_index and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_MIDDLE", int('0100', 2)
+    return "THUMB_MIDDLE", "0100"
   if thumb_ring and not open_hand and not thumb_index and not thumb_middle and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-    return "THUMB_RING", int('0010', 2)
+    return "THUMB_RING", "0010"
   if thumb_pinky and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not index_middle_thumb and not fingers_touching:
-    return "THUMB_PINKY", int('0001', 2)
+    return "THUMB_PINKY", "0001"
   if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
-    return "INDEX_MIDDLE_THUMB", int('0101', 2)
+    return "INDEX_MIDDLE_THUMB", "0101"
   if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
-    return "FINGERS_TOUCHING", None
+    return "FINGERS_TOUCHING", "Placeholder"
   #if no gesture can be determined
-  return "UNKNOWN", None
+  return "UNKNOWN", "UNKNOWN"
 
 
 if __name__=="__main__":

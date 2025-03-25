@@ -461,7 +461,7 @@ def extract_gesture(landmarks):
   if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
     return "INDEX_MIDDLE_THUMB", "0101"
   if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
-    return "FINGERS_TOUCHING", "Placeholder"
+    return "FINGERS_TOUCHING", "Placeholder hehe sorry Dave ;) "
   #if no gesture can be determined
   return "UNKNOWN", "UNKNOWN"
 

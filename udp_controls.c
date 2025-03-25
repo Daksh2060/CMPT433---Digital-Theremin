@@ -90,6 +90,34 @@ static void process_string(const char *cmd)
         strncpy(prev_cmd, cmd, CMD_SIZE - 1); 
         prev_cmd[CMD_SIZE - 1] = '\0';
 
+        if (strcasecmp(cmd, "0000") == 0) {
+            printf("OPEN_HAND\n");
+        } 
+
+        if (strcasecmp(cmd, "1000") == 0) { 
+            printf("THUMB_INDEX\n");
+        } 
+
+        if (strcasecmp(cmd, "0100") == 0) {
+            printf("THUMB_MIDDLE\n");
+        } 
+
+        if (strcasecmp(cmd, "0010") == 0) {
+            printf("THUMB_RING\n");
+        } 
+
+        if (strcasecmp(cmd, "0001") == 0) {
+            printf("THUMB_PINKY\n");
+        } 
+
+        if (strcasecmp(cmd, "0101") == 0) {
+            printf("INDEX_MIDDLE_THUMB\n");
+        } 
+
+        if (strcasecmp(cmd, "Placeholder") == 0) {
+            printf("FINGERS_TOUCHING\n");
+        } 
+
         if (strcasecmp(cmd, "stop") == 0) {
             char buffer[CMD_SIZE];
             snprintf(buffer, sizeof(buffer), "Terminating Program.");

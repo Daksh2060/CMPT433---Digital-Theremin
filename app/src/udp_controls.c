@@ -12,6 +12,7 @@
 #define UDP_PORT 12345
 #define MAX_BUFFER_SIZE 1600 
 
+#define NUM_HANDLERS 6
 #define CMD_SIZE 128
 
 char prev_cmd[CMD_SIZE] = "";
@@ -24,6 +25,20 @@ static socklen_t addr_len = sizeof(client_addr);
 
 static volatile bool running = true;
 volatile bool end_program = false;
+
+typedef struct {
+    const char *cmd;
+    void (*handler)(void);
+} CommandHandler;
+
+CommandHandler handlers[] = {
+    {"0000", process_0000},
+    {"1000", process_1000},
+    {"0100", process_0100},
+    {"0010", process_0010},
+    {"0001", process_0001},
+    {"0101", process_0101}
+};
 
 static void *udp_listener(void *arg);
 static void process_string(const char *cmd);
@@ -87,32 +102,17 @@ static void *udp_listener(void *arg)
 static void process_string(const char *cmd) 
 {
     if (strcasecmp(cmd, prev_cmd) != 0) {
-        strncpy(prev_cmd, cmd, CMD_SIZE - 1); 
+        strncpy(prev_cmd, cmd, CMD_SIZE - 1);
         prev_cmd[CMD_SIZE - 1] = '\0';
 
-        if (strcasecmp(cmd, "0000") == 0) {
-            process_0000();
-        } 
-
-        if (strcasecmp(cmd, "1000") == 0) { 
-            process_1000();
-        } 
-
-        if (strcasecmp(cmd, "0100") == 0) {
-            process_0100();
-        } 
-
-        if (strcasecmp(cmd, "0010") == 0) {
-            process_0010();
-        } 
-
-        if (strcasecmp(cmd, "0001") == 0) {
-            process_0001();
-        } 
-
-        if (strcasecmp(cmd, "0101") == 0) {
-            process_0101();
-        } 
+        bool matched = false;
+        for (size_t i = 0; i < NUM_HANDLERS; i++) {
+            if (strcasecmp(cmd, handlers[i].cmd) == 0) {
+                handlers[i].handler();
+                matched = true;
+                break;
+            }
+        }
 
         if (strcasecmp(cmd, "stop") == 0) {
             char buffer[CMD_SIZE];
@@ -131,12 +131,12 @@ void udp_cleanup(void)
     close(socket_descriptor);
 }
 
-int main()
-{
-    udp_init();
-    while (1) {
-        sleep(1);
-    }
-    udp_cleanup();
-    return 0;
-}
+// int main()
+// {
+//     udp_init();
+//     while (1) {
+//         sleep(1);
+//     }
+//     udp_cleanup();
+//     return 0;
+// }

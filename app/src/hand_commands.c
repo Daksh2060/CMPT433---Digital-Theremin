@@ -1,7 +1,7 @@
 #include "hand_commands.h"
 #include <stdio.h>
 #include <string.h>
-#include "sine_mixer.h"
+//#include "sine_mixer.h"
 
 void process_0000(){
 

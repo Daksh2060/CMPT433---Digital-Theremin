@@ -65,7 +65,7 @@ static void play_note(double freq);
 void command_handler_init() 
 {
     pthread_mutex_init(&lock, NULL);
-
+    SineMixer_init();
     if (pthread_create(&thread, NULL, command_thread, NULL) != 0) {
         perror("Failed to create command thread");
     }
@@ -86,6 +86,7 @@ void command_handler_cleanup()
     end_thread = true;    
     pthread_join(thread, NULL);       
     pthread_mutex_destroy(&lock);      
+    SineMixer_cleanup();
 }
 
 static void process_command(int cmd) 

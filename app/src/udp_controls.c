@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "hand_commands.h"
+#include "utils.h"
 
 #define UDP_PORT 12345
 #define MAX_BUFFER_SIZE 1600 
@@ -29,13 +30,6 @@ volatile bool end_program = false;
 static void *udp_listener(void *arg);
 static void process_string(const char *cmd);
 
-void trim_newline(char *str) 
-{
-    size_t len = strlen(str);
-    if (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r')) {
-        str[len - 1] = '\0';
-    }
-}
 
 void udp_init(void) 
 {
@@ -44,11 +38,6 @@ void udp_init(void)
         close(socket_descriptor);
         exit(EXIT_FAILURE);
     }
-}
-
-static void send_response(const char *msg) 
-{
-    sendto(socket_descriptor, msg, strlen(msg), 0, (struct sockaddr *)&client_addr, addr_len);
 }
 
 static void *udp_listener(void *arg) 

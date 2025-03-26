@@ -26,7 +26,7 @@ struct GPIOLine *line_a = NULL;
 struct GPIOLine *line_b = NULL;
 
 // Counter to track rotary encoder value, thread-safe due to atomic type
-static atomic_int counter = 120;
+static atomic_int counter = 50;
 
 // Thread control variables
 static bool thread_running = false;
@@ -69,7 +69,10 @@ void rotary_encoder_init(RotaryEncoder *rotary_encoder)
     line_a = gpio_open_for_events(GPIO_CHIP, GPIO_LINE_NUMBER_A);
     line_b = gpio_open_for_events(GPIO_CHIP, GPIO_LINE_NUMBER_B);
     is_initialized = true;
+    
     rotary_encoder->is_initialized = true;
+
+    rotary_encoder_start_thread(rotary_encoder);
 }
 
 void rotary_encoder_start_thread(RotaryEncoder *rotary_encoder)
@@ -144,7 +147,7 @@ static void increment_counter()
 {
     pthread_mutex_lock(&counter_mutex);
     {
-        if (counter < 300){
+        if (counter < 100){
             counter += 5;
         }
     }
@@ -156,7 +159,7 @@ static void decrement_counter()
 {
     pthread_mutex_lock(&counter_mutex);
     {
-        if (counter > 40){
+        if (counter > 0){
             counter -= 5;
         }
     }

@@ -114,8 +114,6 @@ void lcd_display_text(LCD *lcd, const char** messages, const int* font_sizes, in
                              (num_lines * LCD_LINE_HEIGHT), s_fb);
 }
 
-
-
 void lcd_clear(LCD *lcd)
 {
     assert(lcd != NULL);

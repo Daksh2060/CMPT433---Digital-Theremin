@@ -1,6 +1,6 @@
 __pycache__/udp_module.cpython-311.pyc
 test
-
+build/
 mediapipe/
 mediapipe_env/
 vmlinux

@@ -1,6 +1,7 @@
 // a modifed version of the audiomixer from a3
-#include "../include/hal/sine_mixer.h"
 
+// #include "../include/hal/sine_mixer.h"
+#include "sine_mixer.h"
 #include <alsa/asoundlib.h>
 #include <stdbool.h>
 #include <pthread.h>

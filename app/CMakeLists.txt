@@ -15,6 +15,7 @@ target_link_libraries(digital_theremin PRIVATE gpiod)
 target_link_libraries(digital_theremin PRIVATE common)
 target_link_libraries(digital_theremin LINK_PRIVATE lcd)
 target_link_libraries(digital_theremin LINK_PRIVATE lgpio)
+target_link_libraries(digital_theremin PRIVATE m)
 
 # Copy executable to final location (change `digital_theremin` to project name as needed)
 add_custom_command(TARGET digital_theremin POST_BUILD 

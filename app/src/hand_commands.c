@@ -48,6 +48,7 @@ static void process_command(int cmd)
 
 static void* command_thread(void* arg) 
 {
+    (void)arg;
     while (1) {
         if (command != -1) {
             pthread_mutex_lock(&lock);

@@ -1,3 +1,7 @@
+// TEMP FILE, will remove it after finishing knob module
+
+
+
 #include "volume_controls.h"
 #include "audio_mixer.h"
 #include "utils.h"
@@ -9,7 +13,6 @@
 #define VOLUME_INCREMENT 5 // Volume increment value
 
 // Thread control and mutex variables
-static pthread_t controller_thread;
 static pthread_mutex_t controller_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Current volume and screen values

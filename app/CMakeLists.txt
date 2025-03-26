@@ -25,9 +25,9 @@ add_custom_command(TARGET digital_theremin POST_BUILD
   COMMENT "Copying ARM executable to public NFS directory")
 
 
-# Copy the folder of WAVE files to NFS
-add_custom_command(TARGET digital_theremin POST_BUILD
-COMMAND "${CMAKE_COMMAND}" -E copy_directory
-"${CMAKE_SOURCE_DIR}/wave-files"
-"~/cmpt433/public/myApps/wave-files"
-COMMENT "Copying WAVE files to public NFS directory")
+# # Copy the folder of WAVE files to NFS
+# add_custom_command(TARGET digital_theremin POST_BUILD
+# COMMAND "${CMAKE_COMMAND}" -E copy_directory
+# "${CMAKE_SOURCE_DIR}/wave-files"
+# "~/cmpt433/public/myApps/wave-files"
+# COMMENT "Copying WAVE files to public NFS directory")

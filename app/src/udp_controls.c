@@ -30,6 +30,7 @@ volatile bool end_program = false;
 static void *udp_listener(void *arg);
 static void process_string(const char *cmd);
 
+static int binary_string_to_integer(const char* str);
 
 void udp_init(void) 
 {
@@ -80,10 +81,14 @@ static void process_string(const char *cmd)
         strncpy(prev_cmd, cmd, CMD_SIZE - 1);
         prev_cmd[CMD_SIZE - 1] = '\0';
 
-        char *endptr;
-        int value = strtol(cmd, &endptr, 2);
+        //char *endptr;
+        // previously, was just taking the raw 1100 and converting into int
+        // meaning 1100 meant 1100 and not 14
+        int value = binary_string_to_integer(cmd); //strtol(cmd, &endptr, 2);
 
-        update_current_command(value);
+        // TODO: sanecheck value?
+
+        command_handler_update_current_command(value);
     }
 }
 
@@ -93,6 +98,16 @@ void udp_cleanup(void)
     shutdown(socket_descriptor, SHUT_RDWR);
     pthread_join(udp_thread, NULL);
     close(socket_descriptor);
+}
+
+static int binary_string_to_integer(const char* str) 
+{
+    int out = 0;
+    for(int i = 0; str[i] != '\0'; i++) {
+        // TODO: possible check for if the str is actually in binary or not.
+        out = out * 2 + (str[i] - '0');
+    }
+    return out;
 }
 
 // int main()

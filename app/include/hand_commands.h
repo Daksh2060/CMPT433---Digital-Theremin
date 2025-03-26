@@ -6,7 +6,7 @@
 
 void command_handler_init();
 
-void update_current_command(int cmd);
+void command_handler_update_current_command(int cmd);
 
 void command_handler_cleanup();
 

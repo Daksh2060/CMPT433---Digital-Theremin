@@ -11,6 +11,8 @@ static int period = 50;
 static int waveform = 50;
 static int brightness = 50;
 
+static bool exit_thread = false;
+
 typedef enum
 {
     REST,
@@ -25,6 +27,8 @@ static Control current_control = REST;
 static pthread_t control_thread;
 static pthread_t value_thread;
 static pthread_mutex_t control_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static bool mute = false;
 
 Joystick joystick;
 RotaryEncoder encoder;
@@ -49,8 +53,39 @@ void knob_controls_init()
     }
 }
 
+void get_knob_volume(int *vol)
+{
+    pthread_mutex_lock(&control_mutex);
+    {
+        *vol = volume;
+    }
+    pthread_mutex_unlock(&control_mutex);
+}
+
+void set_knob_volume(int vol)
+{
+    pthread_mutex_lock(&control_mutex);
+    {
+        volume = vol;
+        rotary_encoder_set_value(volume);
+    }
+    pthread_mutex_unlock(&control_mutex);
+}
+
+void toggle_mute()
+{
+    pthread_mutex_lock(&control_mutex);
+    {
+        mute = !mute;    // Toggle the mute state
+    }
+    pthread_mutex_unlock(&control_mutex);
+}
+
 void knob_controls_cleanup()
 {
+    exit_thread = true;
+    pthread_join(control_thread, NULL);
+    pthread_join(value_thread, NULL);
     joystick_cleanup(&joystick);
     rotary_encoder_cleanup(&encoder);
 }
@@ -60,8 +95,6 @@ static void set_direction()
     int x = joystick_read_input(&joystick, JOYSTICK_X);
     sleep_for_ms(3);
     int y = joystick_read_input(&joystick, JOYSTICK_Y);
-
-    // printf("X: %d, Y: %d\n", x, y);
 
     int direction_change;
 
@@ -86,8 +119,6 @@ static void set_direction()
         direction_change = REST;
     }
 
-    //printf("Direction: %d\n", direction_change);
-
     pthread_mutex_lock(&control_mutex);
     {
         current_control = direction_change;
@@ -95,9 +126,21 @@ static void set_direction()
     pthread_mutex_unlock(&control_mutex);
 }
 
+#include <stdio.h>
+#include <pthread.h>
+#include "utils.h"   // Assuming sleep_for_ms() is in utils
+
+
+static void print_stats(){
+
+    printf("\rVolume: %d | Period: %d | Waveform: %d | Brightness: %d | Mute: %s   ", 
+        volume, period, waveform, brightness, mute ? "ON" : "OFF");
+ 
+    fflush(stdout);
+}
+
 static void set_value()
 {
-
     int current_state;
     pthread_mutex_lock(&control_mutex);
     {
@@ -105,20 +148,33 @@ static void set_value()
     }
     pthread_mutex_unlock(&control_mutex);
 
+    // Only allow volume changes if not muted
     if (current_state == VOLUME)
     {
         rotary_encoder_set_value(volume);
+
         while (current_control == VOLUME)
         {
+            pthread_mutex_lock(&control_mutex);
+            bool is_muted = mute;  // Get the current mute state
+            pthread_mutex_unlock(&control_mutex);
+
+            if (is_muted)
+            {
+                volume = 0;
+                print_stats();
+                sleep_for_ms(10);
+                continue;
+            }
+
             int new_vol = rotary_encoder_get_value(&encoder);
-            
+
             if (new_vol != volume)
             {
                 volume = new_vol;
-                //SineMixer_setVolume(volume);
                 sleep_for_ms(10);
-                printf("Volume: %d\n", volume);
             }
+            print_stats();
         }
     }
 
@@ -131,10 +187,10 @@ static void set_value()
             if (new_period != period)
             {
                 period = new_period;
-                // SineMixer_queueFrequency(1.0/period);
                 sleep_for_ms(10);
-                printf("Period: %d\n", period);
             }
+
+            print_stats();
         }
     }
 
@@ -147,10 +203,10 @@ static void set_value()
             if (new_waveform != waveform)
             {
                 waveform = new_waveform;
-                // Waveform
                 sleep_for_ms(10);
-                printf("Waveform: %d\n", waveform);
             }
+
+            print_stats();
         }
     }
 
@@ -163,19 +219,22 @@ static void set_value()
             if (new_brightness != brightness)
             {
                 brightness = new_brightness;
-                // Brightness
                 sleep_for_ms(10);
-                printf("Brightness: %d\n", brightness);
             }
+
+            print_stats();
         }
     }
-    sleep_for_ms(100);
+    
+    print_stats();
+    sleep_for_ms(50);
 }
+
 
 static void *control_thread_func(void *arg)
 {
     (void)arg;
-    while (1)
+    while (!exit_thread)
     {
         set_direction();
     }
@@ -185,7 +244,7 @@ static void *control_thread_func(void *arg)
 static void *value_thread_func(void *arg)
 {
     (void)arg;
-    while (1)
+    while (!exit_thread)
     {
         set_value();
     }

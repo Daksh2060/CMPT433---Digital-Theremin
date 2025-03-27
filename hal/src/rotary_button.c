@@ -7,7 +7,6 @@
 #include "joystick.h"
 #include "utils.h"
 #include "gpio.h"
-#include "i2c.h"
 #include <stdatomic.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -32,7 +31,7 @@
 struct GPIOLine *rotary_button = NULL;
 
 // Counter to track rotary button value, set to loop between 1-3.
-static atomic_int rotary_button_counter = 1;
+static atomic_int rotary_button_counter = 0;
 
 // Thread control variables
 static bool rotary_thread_running = false;
@@ -150,11 +149,12 @@ static void increment_rotary_counter()
     }
     pthread_mutex_lock(&rotary_counter_mutex);
     {
-        if (rotary_button_counter == ROTARY_BUTTON_MAX){
-            rotary_button_counter = ROTARY_BUTTON_MIN;
+        if (rotary_button_counter == 1){
+            rotary_button_counter = 0;
         }
-        else{
-            rotary_button_counter++;
+        else if (rotary_button_counter == 0)
+        {
+            rotary_button_counter = 1;
         }
     }
     pthread_mutex_unlock(&rotary_counter_mutex);

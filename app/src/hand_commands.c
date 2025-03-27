@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <math.h> // for pow
+#include <stdbool.h>
 
 // some very bad code to avoid having to manually enable binary
 // literals in the compiler
@@ -21,7 +22,9 @@
 
 static volatile int command = -1;       
 static pthread_mutex_t lock;            
-static pthread_t thread;             
+static pthread_t thread;    
+
+static bool end_thread = false;
 
 static void process_command(int cmd);
 static void* command_thread(void* arg); 
@@ -80,7 +83,7 @@ void command_handler_update_current_command(int cmd)
 
 void command_handler_cleanup() 
 {
-    pthread_cancel(thread);     
+    end_thread = true;    
     pthread_join(thread, NULL);       
     pthread_mutex_destroy(&lock);      
 }
@@ -100,7 +103,7 @@ static void process_command(int cmd)
 static void* command_thread(void* arg) 
 {
     (void)arg;
-    while (1) {
+    while (!end_thread) {
         if (command != -1) {
             pthread_mutex_lock(&lock);
             {

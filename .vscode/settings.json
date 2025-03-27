@@ -62,6 +62,7 @@
     "inet.h": "c",
     "stdio.h": "c",
     "unistd.h": "c",
-    "asoundlib.h": "c"
+    "asoundlib.h": "c",
+    "program_manager.h": "c"
   }
 }

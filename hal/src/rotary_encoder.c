@@ -169,8 +169,6 @@ static void decrement_counter()
 // Core state machine logic: processes GPIO events and update states
 static void rotary_encoder_do_state()
 {
-    assert(is_initialized);
-
     struct gpiod_line_bulk bulk;
 
     // Wait for an event on line A/B, and can exit thread if program ends

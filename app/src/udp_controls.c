@@ -93,15 +93,11 @@ static void process_string(const char *cmd)
 
 void udp_cleanup(void) 
 {
-    printf("Cleaning up UDP\n");
+
     running = false;
-    printf("Shutting down socket\n");
     shutdown(socket_descriptor, SHUT_RDWR);
-    printf("Closing socket\n");
     pthread_join(udp_thread, NULL);
-    printf("Joined thread\n");
     close(socket_descriptor);
-    printf("Closed socket\n");
 }
 
 static int binary_string_to_integer(const char* str) 

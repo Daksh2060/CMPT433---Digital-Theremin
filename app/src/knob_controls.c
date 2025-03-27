@@ -5,7 +5,7 @@
 #include "sine_mixer.h"
 #include <pthread.h>
 #include <stdio.h>
-
+  
 static int volume = 50;
 static int period = 50;
 static int waveform = 50;
@@ -76,7 +76,7 @@ void toggle_mute()
 {
     pthread_mutex_lock(&control_mutex);
     {
-        mute = !mute;    // Toggle the mute state
+        mute = !mute; 
     }
     pthread_mutex_unlock(&control_mutex);
 }
@@ -126,10 +126,6 @@ static void set_direction()
     pthread_mutex_unlock(&control_mutex);
 }
 
-#include <stdio.h>
-#include <pthread.h>
-#include "utils.h"   // Assuming sleep_for_ms() is in utils
-
 
 static void print_stats(){
 
@@ -148,15 +144,17 @@ static void set_value()
     }
     pthread_mutex_unlock(&control_mutex);
 
-    // Only allow volume changes if not muted
     if (current_state == VOLUME)
     {
         rotary_encoder_set_value(volume);
 
         while (current_control == VOLUME)
         {
+            bool is_muted;
             pthread_mutex_lock(&control_mutex);
-            bool is_muted = mute;  // Get the current mute state
+            {
+                is_muted = mute;
+            }
             pthread_mutex_unlock(&control_mutex);
 
             if (is_muted)
@@ -166,7 +164,6 @@ static void set_value()
                 sleep_for_ms(10);
                 continue;
             }
-
             int new_vol = rotary_encoder_get_value(&encoder);
 
             if (new_vol != volume)
@@ -189,7 +186,6 @@ static void set_value()
                 period = new_period;
                 sleep_for_ms(10);
             }
-
             print_stats();
         }
     }
@@ -205,7 +201,6 @@ static void set_value()
                 waveform = new_waveform;
                 sleep_for_ms(10);
             }
-
             print_stats();
         }
     }
@@ -221,7 +216,6 @@ static void set_value()
                 brightness = new_brightness;
                 sleep_for_ms(10);
             }
-
             print_stats();
         }
     }
@@ -229,7 +223,6 @@ static void set_value()
     print_stats();
     sleep_for_ms(50);
 }
-
 
 static void *control_thread_func(void *arg)
 {

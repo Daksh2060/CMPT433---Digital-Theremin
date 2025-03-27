@@ -19,6 +19,7 @@ void program_manager_init(void)
     button_controls_init();
 }
 
+// Print statements for thread testing, feel free to remove
 void program_manager_cleanup(void)
 {
     button_controls_cleanup();

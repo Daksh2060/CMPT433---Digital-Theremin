@@ -5,9 +5,9 @@
 #include "utils.h"
 #include <stdbool.h>
 #include <pthread.h>
-#include <stdatomic.h>   // For atomic operations
+#include <stdatomic.h>
 
-static pthread_t button_thread = 0;  // Explicitly initialize to avoid undefined behavior
+static pthread_t button_thread = 0;
 
 JoystickButton joy_button;
 RotaryButton rot_button;
@@ -79,7 +79,7 @@ static void* button_thread_func(void* arg)
 {
     (void)arg;
 
-    while (!exit_thread)   // Use atomic load for thread-safe access
+    while (!exit_thread)
     {
         read_rotary_button();
         sleep_for_ms(50);

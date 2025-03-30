@@ -1,62 +1,141 @@
-#include "distance_sensor.h"
-#include "gpio.h"
-#include "utils.h"
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
-#include <time.h>
-#include <stdbool.h>
+#include <gpiod.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-#define TRIGGER_DIRECTION "/sys/class/gpio/gpio6/direction"
-#define TRIGGER_VALUE "/sys/class/gpio/gpio6/value"
+#define GPIOCHIP1 "/dev/gpiochip1"  // GPIO chip for Echo
+#define GPIOCHIP2 "/dev/gpiochip2"  // GPIO chip for Trigger
+#define TRIGGER_PIN 17
+#define ECHO_PIN 38
 
-#define ECHO_DIRECTION "/sys/class/gpio/gpio4/direction"
-#define ECHO_ACTIVATE_LOW "/sys/class/gpio/gpio4/active_low"
-#define ECHO_VALUE "/sys/class/gpio/gpio4/value"
+pthread_t sensor_pulse_thread;
+pthread_t sensor_read_thread;
 
-#define A2D_FILE_VOLTAGE1 "/sys/bus/iio/devices/iio:device0/in_voltage1_raw"
+pthread_mutex_t sensor_mutex = PTHREAD_MUTEX_INITIALIZER;
+int current_distance = 0;
 
-static bool read_thread_running = false;
-static bool pulse_thread_running = false;
+bool pulse_thread_running = true;
+bool read_thread_running = true;
 
-static pthread_t sensor_pulse_thread;
-static pthread_t sensor_read_thread;
-static pthread_mutex_t sensor_mutex = PTHREAD_MUTEX_INITIALIZER;
+// Function to calculate the distance based on time difference
+long double get_distance_cm(struct gpiod_line *echo) {
+    long double start_time = 0;
+    long double end_time = 0;
+    long double length_of_time = 0;
+    long double distance_in_cm = 0;
 
-static int current_distance = 0;
+    while (gpiod_line_get_value(echo) == 0) {
+        start_time = (long double)clock();
+    }
 
-static void *pulse_loop(void *arg);
-static void *read_loop(void *arg);
-static long double get_distance_cm();
+    while (gpiod_line_get_value(echo) == 1) {
+        end_time = (long double)clock();
+    }
 
-void distance_sensor_init()
-{
-    sleep_for_ms(300);
-    write_string_to_file(ECHO_DIRECTION, "in");
-    sleep_for_ms(300);
-    write_string_to_file(TRIGGER_DIRECTION, "out");
-    sleep_for_ms(300);
-    write_string_to_file(ECHO_ACTIVATE_LOW, "0");
+    length_of_time = end_time - start_time;
+    distance_in_cm = length_of_time * 0.000017150; // Convert to cm
+
+    if (distance_in_cm <= 0) {
+        distance_in_cm = 0;
+    }
+
+    return distance_in_cm;
+}
+
+// Thread function to pulse the trigger
+static void *pulse_loop(void *arg) {
+    (void)arg;  // Unused parameter
+    struct gpiod_chip *chip2;
+    struct gpiod_line *trigger;
+
+    chip2 = gpiod_chip_open(GPIOCHIP2);
+    if (!chip2) {
+        perror("Failed to open gpiochip2");
+        exit(EXIT_FAILURE);
+    }
+
+    trigger = gpiod_chip_get_line(chip2, TRIGGER_PIN);
+    if (!trigger) {
+        perror("Failed to get Trigger line");
+        exit(EXIT_FAILURE);
+    }
+
+    if (gpiod_line_request_output(trigger, "Trigger", 0) < 0) {
+        perror("Failed to request Trigger pin");
+        exit(EXIT_FAILURE);
+    }
+
+    while (pulse_thread_running) {
+        gpiod_line_set_value(trigger, 1);
+        usleep(300000);  // 300ms pulse
+        gpiod_line_set_value(trigger, 0);
+        usleep(300000);  // 300ms wait
+    }
+
+    gpiod_line_release(trigger);
+    gpiod_chip_close(chip2);
+    return NULL;
+}
+
+// Thread function to read the echo and calculate the distance
+static void *read_loop(void *arg) {
+    (void)arg;  // Unused parameter
+    struct gpiod_chip *chip1;
+    struct gpiod_line *echo;
+
+    chip1 = gpiod_chip_open(GPIOCHIP1);
+    if (!chip1) {
+        perror("Failed to open gpiochip1");
+        exit(EXIT_FAILURE);
+    }
+
+    echo = gpiod_chip_get_line(chip1, ECHO_PIN);
+    if (!echo) {
+        perror("Failed to get Echo line");
+        exit(EXIT_FAILURE);
+    }
+
+    if (gpiod_line_request_input(echo, "Echo") < 0) {
+        perror("Failed to request Echo pin");
+        exit(EXIT_FAILURE);
+    }
+
+    while (read_thread_running) {
+        pthread_mutex_lock(&sensor_mutex);
+        {
+            current_distance = get_distance_cm(echo);
+        }
+        pthread_mutex_unlock(&sensor_mutex);
+
+        usleep(50000);
+    }
+
+    gpiod_line_release(echo);
+    gpiod_chip_close(chip1);
+    return NULL;
+}
+
+void distance_sensor_init() {
+    sleep(1);
 
     pulse_thread_running = true;
     read_thread_running = true;
 
-    if (pthread_create(&sensor_pulse_thread, NULL, pulse_loop, NULL) != 0){
-        perror("Error creating thread");
+    if (pthread_create(&sensor_pulse_thread, NULL, pulse_loop, NULL) != 0) {
+        perror("Error creating pulse thread");
         exit(EXIT_FAILURE);
     }
 
-    if (pthread_create(&sensor_read_thread, NULL, read_loop, NULL) != 0){
-        perror("Error creating thread");
+    if (pthread_create(&sensor_read_thread, NULL, read_loop, NULL) != 0) {
+        perror("Error creating read thread");
         exit(EXIT_FAILURE);
     }
 }
 
-int get_distance()
-{
+
+int get_distance() {
     int distance;
     pthread_mutex_lock(&sensor_mutex);
     {
@@ -66,8 +145,8 @@ int get_distance()
     return distance;
 }
 
-void distance_sensor_cleanup()
-{
+
+void distance_sensor_cleanup() {
     pulse_thread_running = false;
     read_thread_running = false;
 
@@ -77,56 +156,6 @@ void distance_sensor_cleanup()
     pthread_mutex_destroy(&sensor_mutex);
 }
 
-
-static void *pulse_loop(void *arg)
-{
-    (void)arg;
-    while (pulse_thread_running){
-        sleep_for_ms(300);
-        write_int_to_file(TRIGGER_VALUE, 1);
-        sleep_for_ms(300);
-        write_int_to_file(TRIGGER_VALUE, 0);
-    }
-    return NULL;
-}
-
-static void *read_loop(void *arg)
-{
-    (void)arg;
-    while (read_thread_running)
-    {
-        pthread_mutex_lock(&sensor_mutex);
-        {
-            current_distance = get_distance_cm();
-        }
-        pthread_mutex_unlock(&sensor_mutex);
-        sleep_for_ms(50);
-    }
-    return NULL;
-}
-
-static long double get_distance_cm()
-{
-    long double start_time = 0;
-    long double end_time = 0;
-    long double length_of_time = 0;
-    long double distance_in_cm = 0;
-
-    while (get_data_from_file(ECHO_VALUE) == 6){
-        start_time = get_time_in_ns();
-    }
-    while (get_data_from_file(ECHO_VALUE) == 4){
-        end_time = get_time_in_ns();
-    }
-
-    length_of_time = end_time - start_time;
-    distance_in_cm = length_of_time * 0.000017150;
-
-    if (distance_in_cm <= 0){
-        distance_in_cm = 0;
-    }
-    return distance_in_cm;
-}
 
 
 //# BACKUP

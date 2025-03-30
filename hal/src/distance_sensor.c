@@ -20,7 +20,7 @@ bool pulse_thread_running = true;
 bool read_thread_running = true;
 
 // Function to calculate the distance based on time difference
-long double get_distance_cm(struct gpiod_line *echo) {
+void get_distance_cm(struct gpiod_line *echo) {
     long double start_time = 0;
     long double end_time = 0;
     long double length_of_time = 0;
@@ -40,19 +40,18 @@ long double get_distance_cm(struct gpiod_line *echo) {
 
     // Calculate time difference
     length_of_time = end_time - start_time;
-    distance_in_cm = length_of_time * 0.000017150; // Convert to cm
+    distance_in_cm = length_of_time * 0.000017150;
 
     if (distance_in_cm <= 0) {
         distance_in_cm = 0;
     }
 
-    return distance_in_cm;
+    current_distance = (int)distance_in_cm;
 }
 
 
-// Thread function to pulse the trigger
 static void *pulse_loop(void *arg) {
-    (void)arg;  // Unused parameter
+    (void)arg;
     struct gpiod_chip *chip2;
     struct gpiod_line *trigger;
 
@@ -74,58 +73,19 @@ static void *pulse_loop(void *arg) {
     }
 
     while (pulse_thread_running) {
-        while (pulse_thread_running) {
-            gpiod_line_set_value(trigger, 1);
-            printf("Trigger HIGH\n"); 
-            usleep(300000); 
-            gpiod_line_set_value(trigger, 0);
-            printf("Trigger LOW\n");  
-            usleep(300000);  
-        }  
-    }
-
+        gpiod_line_set_value(trigger, 1);
+        printf("Trigger HIGH\n"); 
+        usleep(300000); 
+        gpiod_line_set_value(trigger, 0);
+        printf("Trigger LOW\n");  
+        usleep(300000);  
+    }  
+    
     gpiod_line_release(trigger);
     gpiod_chip_close(chip2);
     return NULL;
 }
 
-// Thread function to read the echo and calculate the distance
-static void *read_loop(void *arg) {
-    (void)arg;  // Unused parameter
-    struct gpiod_chip *chip1;
-    struct gpiod_line *echo;
-
-    chip1 = gpiod_chip_open(GPIOCHIP1);
-    if (!chip1) {
-        perror("Failed to open gpiochip1");
-        exit(EXIT_FAILURE);
-    }
-
-    echo = gpiod_chip_get_line(chip1, ECHO_PIN);
-    if (!echo) {
-        perror("Failed to get Echo line");
-        exit(EXIT_FAILURE);
-    }
-
-    if (gpiod_line_request_input(echo, "Echo") < 0) {
-        perror("Failed to request Echo pin");
-        exit(EXIT_FAILURE);
-    }
-
-    while (read_thread_running) {
-        pthread_mutex_lock(&sensor_mutex);
-        {
-            current_distance = get_distance_cm(echo);
-        }
-        pthread_mutex_unlock(&sensor_mutex);
-
-        usleep(50000);
-    }
-
-    gpiod_line_release(echo);
-    gpiod_chip_close(chip1);
-    return NULL;
-}
 
 void distance_sensor_init() {
     sleep(1);
@@ -135,11 +95,6 @@ void distance_sensor_init() {
 
     if (pthread_create(&sensor_pulse_thread, NULL, pulse_loop, NULL) != 0) {
         perror("Error creating pulse thread");
-        exit(EXIT_FAILURE);
-    }
-
-    if (pthread_create(&sensor_read_thread, NULL, read_loop, NULL) != 0) {
-        perror("Error creating read thread");
         exit(EXIT_FAILURE);
     }
 }

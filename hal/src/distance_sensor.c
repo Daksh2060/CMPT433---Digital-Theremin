@@ -216,11 +216,11 @@ static long double get_distance_cm()
 //     }
 //     usleep(10);
 
-//     char low_value = LOW;
-//     if (write(trigger_fd, &low_value, 1) == -1) {
-//         perror("Failed to write LOW to trigger");
-//         exit(EXIT_FAILURE);
-//     }
+    // char low_value = LOW;
+    // if (write(trigger_fd, &low_value, 1) == -1) {
+    //     perror("Failed to write LOW to trigger");
+    //     exit(EXIT_FAILURE);
+    // }
 
 //     uint64_t real_start = get_time_ns();
 //     uint64_t start = real_start, end = real_start;

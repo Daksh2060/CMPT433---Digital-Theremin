@@ -1,19 +1,19 @@
 #include "program_manager.h"
 #include "utils.h"
 #include <stdbool.h>
+#include "distance_sensor.h"
 
 volatile bool exit_theremin_program = false;
 
 int main()
 {
-    program_manager_init();
+    distance_sensor_init();
+    while(1){
 
-    while (!exit_theremin_program)
-    {
-        sleep_for_ms(1);
+        int distance = get_distance();
+        printf("Distance: %d cm\r", distance);
+        fflush(stdout);
+        sleep_for_ms(10);
     }
-    
-    program_manager_cleanup();
-
     return 0;
 }

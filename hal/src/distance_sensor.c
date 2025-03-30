@@ -29,8 +29,39 @@ bool read_thread_running = true;
 struct gpiod_chip *chip1, *chip2;
 struct gpiod_line *trigger, *echo;
 
+static void *read_loop(void *arg);
+static int get_distance_cm(struct gpiod_line *echo);
 
-int get_distance_cm(struct gpiod_line *echo) {
+void distance_sensor_init() 
+{
+    sleep(1);
+    read_thread_running = true;
+    
+    if (pthread_create(&sensor_read_thread, NULL, read_loop, NULL) != 0) {
+        perror("Error creating read thread");
+        exit(EXIT_FAILURE);
+    }
+    usleep(500000);
+}
+
+int get_distance() 
+{
+    int distance;
+    pthread_mutex_lock(&sensor_mutex);
+    distance = current_distance;
+    pthread_mutex_unlock(&sensor_mutex);
+    return distance;
+}
+
+void distance_sensor_cleanup() 
+{
+    read_thread_running = false;
+    pthread_join(sensor_read_thread, NULL);
+    pthread_mutex_destroy(&sensor_mutex);
+}
+
+static int get_distance_cm(struct gpiod_line *echo) 
+{
     struct timespec start_time, end_time, current_time;
     long long timeout_ns;
     int distance_in_cm = 0;
@@ -79,7 +110,8 @@ int get_distance_cm(struct gpiod_line *echo) {
 }
 
 
-static void *read_loop(void *arg) {
+static void *read_loop(void *arg) 
+{
     (void)arg; 
     int distance_value;
     
@@ -136,36 +168,4 @@ static void *read_loop(void *arg) {
     gpiod_line_release(trigger);
     gpiod_chip_close(chip2);
     return NULL;
-}
-
-
-void distance_sensor_init() {
-    sleep(1);
-    
-    read_thread_running = true;
-    
-    if (pthread_create(&sensor_read_thread, NULL, read_loop, NULL) != 0) {
-        perror("Error creating read thread");
-        exit(EXIT_FAILURE);
-    }
-    
-    usleep(500000);
-}
-
-
-int get_distance() {
-    int distance;
-    pthread_mutex_lock(&sensor_mutex);
-    distance = current_distance;
-    pthread_mutex_unlock(&sensor_mutex);
-    return distance;
-}
-
-
-void distance_sensor_cleanup() {
-    read_thread_running = false;
-    
-    pthread_join(sensor_read_thread, NULL);
-    
-    pthread_mutex_destroy(&sensor_mutex);
 }

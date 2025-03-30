@@ -10,7 +10,7 @@ volatile bool exit_theremin_program = false;
 int main() {
 
     distance_sensor_init();
-    sleep(2); 
+    sleep_for_ms(2000);
 
     while (1) {
         int distance = get_distance();
@@ -19,7 +19,7 @@ int main() {
         } else {
             printf("Error reading distance\n");
         }
-        usleep(50000); 
+        sleep_for_ms(50);
     }
     
     return 0;

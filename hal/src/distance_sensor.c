@@ -10,12 +10,12 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#define TRIGGER_DIRECTION "/sys/class/gpio/gpio48/direction"
-#define TRIGGER_VALUE "/sys/class/gpio/gpio48/value"
+#define TRIGGER_DIRECTION "/sys/class/gpio/gpio6/direction"
+#define TRIGGER_VALUE "/sys/class/gpio/gpio6/value"
 
-#define ECHO_DIRECTION "/sys/class/gpio/gpio49/direction"
-#define ECHO_ACTIVATE_LOW "/sys/class/gpio/gpio49/active_low"
-#define ECHO_VALUE "/sys/class/gpio/gpio49/value"
+#define ECHO_DIRECTION "/sys/class/gpio/gpio4/direction"
+#define ECHO_ACTIVATE_LOW "/sys/class/gpio/gpio4/active_low"
+#define ECHO_VALUE "/sys/class/gpio/gpio4/value"
 
 #define A2D_FILE_VOLTAGE1 "/sys/bus/iio/devices/iio:device0/in_voltage1_raw"
 
@@ -112,10 +112,10 @@ static long double get_distance_cm()
     long double length_of_time = 0;
     long double distance_in_cm = 0;
 
-    while (get_data_from_file(ECHO_VALUE) == 48){
+    while (get_data_from_file(ECHO_VALUE) == 6){
         start_time = get_time_in_ns();
     }
-    while (get_data_from_file(ECHO_VALUE) == 49){
+    while (get_data_from_file(ECHO_VALUE) == 4){
         end_time = get_time_in_ns();
     }
 

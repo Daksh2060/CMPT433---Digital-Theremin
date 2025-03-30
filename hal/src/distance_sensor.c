@@ -26,14 +26,19 @@ long double get_distance_cm(struct gpiod_line *echo) {
     long double length_of_time = 0;
     long double distance_in_cm = 0;
 
+    // Wait for Echo pin to go HIGH
     while (gpiod_line_get_value(echo) == 0) {
+        printf("Waiting for Echo HIGH\n");  // Debug
         start_time = (long double)clock();
     }
 
+    // Echo pin is HIGH, start the timer
+    printf("Echo HIGH\n");  // Debug
     while (gpiod_line_get_value(echo) == 1) {
         end_time = (long double)clock();
     }
 
+    // Calculate time difference
     length_of_time = end_time - start_time;
     distance_in_cm = length_of_time * 0.000017150; // Convert to cm
 
@@ -43,6 +48,7 @@ long double get_distance_cm(struct gpiod_line *echo) {
 
     return distance_in_cm;
 }
+
 
 // Thread function to pulse the trigger
 static void *pulse_loop(void *arg) {
@@ -68,10 +74,14 @@ static void *pulse_loop(void *arg) {
     }
 
     while (pulse_thread_running) {
-        gpiod_line_set_value(trigger, 1);
-        usleep(300000);  // 300ms pulse
-        gpiod_line_set_value(trigger, 0);
-        usleep(300000);  // 300ms wait
+        while (pulse_thread_running) {
+            gpiod_line_set_value(trigger, 1);
+            printf("Trigger HIGH\n"); 
+            usleep(300000); 
+            gpiod_line_set_value(trigger, 0);
+            printf("Trigger LOW\n");  
+            usleep(300000);  
+        }  
     }
 
     gpiod_line_release(trigger);

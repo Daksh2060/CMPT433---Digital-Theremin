@@ -7,6 +7,21 @@
 #include <time.h>
 #include <string.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#include <stdbool.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#include <time.h>
+#include <stdbool.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void sleep_for_ms(long long delay_in_ms)
 {
@@ -16,16 +31,16 @@ void sleep_for_ms(long long delay_in_ms)
     int seconds = delay_ns / NS_PER_SECOND;
     int nanoseconds = delay_ns % NS_PER_SECOND;
     struct timespec req_delay = {seconds, nanoseconds};
-    nanosleep(&req_delay, (struct timespec *) NULL);
+    nanosleep(&req_delay, (struct timespec *)NULL);
 }
 
-bool has_timeout_passed(time_t start_time, int timeout_seconds) 
+bool has_timeout_passed(time_t start_time, int timeout_seconds)
 {
     time_t current_time = time(NULL);
     return difftime(current_time, start_time) >= timeout_seconds;
 }
 
-long long get_time_in_ms(void) 
+long long get_time_in_ms(void)
 {
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
@@ -42,14 +57,14 @@ long long get_time_in_us(void)
     return (long long)now.tv_sec * 1000000 + now.tv_nsec / 1000;
 }
 
-long long get_time_in_ns(void) 
+long long get_time_in_ns(void)
 {
     struct timespec spec;
     clock_gettime(CLOCK_BOOTTIME, &spec);
     long long seconds = spec.tv_sec;
-    long long nanoSeconds = spec.tv_nsec + seconds * 1000*1000*1000;
-	assert(nanoSeconds > 0);
-    
+    long long nanoSeconds = spec.tv_nsec + seconds * 1000 * 1000 * 1000;
+    assert(nanoSeconds > 0);
+
     static long long lastTimeHack = 0;
     assert(nanoSeconds > lastTimeHack);
     lastTimeHack = nanoSeconds;
@@ -57,12 +72,52 @@ long long get_time_in_ns(void)
     return nanoSeconds;
 }
 
-void trim_newline(char *str) 
+void trim_newline(char *str)
 {
     size_t len = strlen(str);
-    if (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r')) {
+    if (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r'))
+    {
         str[len - 1] = '\0';
     }
 }
 
+void write_string_to_file(char *fileName, char *input)
+{
+    FILE *pFile = fopen(fileName, "w");
+    if (pFile == NULL)
+    {
+        printf("ERROR: Unable to open export file.\n");
+        exit(1);
+    }
+    fprintf(pFile, "%s", input);
+    fclose(pFile);
+}
 
+int get_data_from_file(char *fileName)
+{
+    FILE *pFile = fopen(fileName, "r");
+    if (pFile == NULL)
+    {
+        printf("ERROR: Unable to open file (%s) for read\n", fileName);
+        exit(-1);
+    }
+
+    const int MAX_LENGTH = 1024;
+    char buff[MAX_LENGTH];
+    fgets(buff, MAX_LENGTH, pFile);
+    fclose(pFile);
+    return buff[0];
+}
+
+void write_int_to_file(char *fileName, int input)
+{
+    FILE *pFile = fopen(fileName, "w");
+
+    if (pFile == NULL)
+    {
+        printf("ERROR: Unable to open export file.\n");
+        exit(1);
+    }
+    fprintf(pFile, "%d", input);
+    fclose(pFile);
+}

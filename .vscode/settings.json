@@ -63,6 +63,8 @@
     "stdio.h": "c",
     "unistd.h": "c",
     "asoundlib.h": "c",
-    "program_manager.h": "c"
+    "program_manager.h": "c",
+    "stdbool.h": "c",
+    "complex": "c"
   }
 }

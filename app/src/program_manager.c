@@ -8,12 +8,14 @@
 #include "sine_mixer.h"
 #include "gpio.h"
 #include <stdio.h>
+#include "distance_sensor.h"
 
 volatile bool exit_theremin_program = false;
 
 void program_manager_init(void)
 {
     udp_init();
+    distance_sensor_init();
     command_handler_init();
     dial_controls_init();
     button_controls_init();
@@ -32,5 +34,6 @@ void program_manager_cleanup(void)
     dial_controls_cleanup();
     gpio_cleanup();
     udp_cleanup();
+    distance_sensor_cleanup();
     command_handler_cleanup();
 }

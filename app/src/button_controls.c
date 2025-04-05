@@ -1,7 +1,7 @@
 #include "button_controls.h"
 #include "joystick_button.h"
 #include "rotary_button.h"
-#include "knob_controls.h"
+#include "dial_controls.h"
 #include "utils.h"
 #include <stdbool.h>
 #include <pthread.h>
@@ -15,7 +15,6 @@ RotaryButton rot_button;
 static int prev_volume;  
 static bool exit_thread = false;
 
-
 static void read_rotary_button();
 static void* button_thread_func(void* arg);
 
@@ -24,7 +23,7 @@ void button_controls_init()
     joystick_button_init(&joy_button);
     rotary_button_init(&rot_button);
 
-    get_knob_volume(&prev_volume);
+    get_dial_volume(&prev_volume);
 
     if (pthread_create(&button_thread, NULL, button_thread_func, NULL) != 0)
     {
@@ -58,8 +57,8 @@ static void read_rotary_button()
         {
             button_pressed = true;
             toggle_mute();
-            get_knob_volume(&prev_volume);
-            set_knob_volume(0);
+            get_dial_volume(&prev_volume);
+            set_dial_volume(0);
         }
     }
 
@@ -68,12 +67,11 @@ static void read_rotary_button()
         if (button_pressed)
         {
             button_pressed = false;
-            set_knob_volume(prev_volume);
+            set_dial_volume(prev_volume);
             toggle_mute();
         }
     }
 }
-
 
 static void* button_thread_func(void* arg)
 {

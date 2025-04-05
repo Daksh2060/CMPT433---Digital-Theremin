@@ -1,7 +1,7 @@
 
 #include "button_controls.h"
 #include "hand_commands.h"
-#include "knob_controls.h"
+#include "dial_controls.h"
 #include "udp_controls.h"
 #include "utils.h"
 #include "program_manager.h"
@@ -9,27 +9,28 @@
 #include "gpio.h"
 #include <stdio.h>
 
+volatile bool exit_theremin_program = false;
 
-// Audio mixer not included
 void program_manager_init(void)
 {
     udp_init();
     command_handler_init();
-    knob_controls_init();
+    dial_controls_init();
     button_controls_init();
 }
 
-// Print statements for thread testing, feel free to remove
+void program_wait_to_end()
+{
+    while (exit_theremin_program == false) {
+        sleep_for_ms(111);
+    }
+}
+
 void program_manager_cleanup(void)
 {
     button_controls_cleanup();
-    printf("Button controls cleaned up\n");
-    knob_controls_cleanup();
-    printf("Knob controls cleaned up\n");
+    dial_controls_cleanup();
     gpio_cleanup();
-    printf("GPIO cleaned up\n");
     udp_cleanup();
-    printf("UDP cleaned up\n");
     command_handler_cleanup();
-    printf("Command handler cleaned up\n");
 }

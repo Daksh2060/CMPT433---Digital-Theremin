@@ -1,4 +1,4 @@
-#include "knob_controls.h"
+#include "dial_controls.h"
 #include "rotary_encoder.h"
 #include "joystick.h"
 #include "utils.h"
@@ -38,7 +38,7 @@ static void *control_thread_func(void *arg);
 static void set_value();
 static void set_direction();
 
-void knob_controls_init()
+void dial_controls_init()
 {
     joystick_init(&joystick);
     rotary_encoder_init(&encoder);
@@ -53,7 +53,7 @@ void knob_controls_init()
     }
 }
 
-void get_knob_volume(int *vol)
+void get_dial_volume(int *vol)
 {
     pthread_mutex_lock(&control_mutex);
     {
@@ -62,7 +62,7 @@ void get_knob_volume(int *vol)
     pthread_mutex_unlock(&control_mutex);
 }
 
-void set_knob_volume(int vol)
+void set_dial_volume(int vol)
 {
     pthread_mutex_lock(&control_mutex);
     {
@@ -81,7 +81,7 @@ void toggle_mute()
     pthread_mutex_unlock(&control_mutex);
 }
 
-void knob_controls_cleanup()
+void dial_controls_cleanup()
 {
     exit_thread = true;
     pthread_join(control_thread, NULL);

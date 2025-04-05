@@ -109,13 +109,3 @@ static int binary_string_to_integer(const char* str)
     }
     return out;
 }
-
-// int main()
-// {
-//     udp_init();
-//     while (1) {
-//         sleep(1);
-//     }
-//     udp_cleanup();
-//     return 0;
-// }

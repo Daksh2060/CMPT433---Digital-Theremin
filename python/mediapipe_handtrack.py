@@ -99,9 +99,9 @@ def main():
           previous_gesture = gesture
 
     # COMMENT OUT WHEN RUNNING ON BOARD!
-    latency = time.time() - start_latency
-    debug_frame = draw_debug_info(debug_frame, latency, gesture)
-    cv2.imshow('Gesture-Detection', debug_frame)
+    #latency = time.time() - start_latency
+    #debug_frame = draw_debug_info(debug_frame, latency, gesture)
+    #cv2.imshow('Gesture-Detection', debug_frame)
       
 
   cap.release()

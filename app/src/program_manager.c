@@ -7,6 +7,7 @@
 #include "program_manager.h"
 #include "sine_mixer.h"
 #include "gpio.h"
+#include "lcd_menus.h"
 #include <stdio.h>
 #include "distance_sensor.h"
 
@@ -19,6 +20,7 @@ void program_manager_init(void)
     command_handler_init();
     dial_controls_init();
     button_controls_init();
+    lcd_menu_init();
 }
 
 void program_wait_to_end()
@@ -36,4 +38,5 @@ void program_manager_cleanup(void)
     udp_cleanup();
     distance_sensor_cleanup();
     command_handler_cleanup();
+    lcd_menu_cleanup();
 }

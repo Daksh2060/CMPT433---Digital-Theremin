@@ -65,7 +65,9 @@
     "asoundlib.h": "c",
     "program_manager.h": "c",
     "stdbool.h": "c",
-    "complex": "c"
+    "complex": "c",
+    "lcd_menus.h": "c",
+    "dial_controls.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

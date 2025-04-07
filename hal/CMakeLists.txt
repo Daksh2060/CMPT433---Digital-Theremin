@@ -13,4 +13,7 @@ target_link_libraries(hal PRIVATE common)
 target_link_libraries(hal LINK_PRIVATE lcd)
 target_link_libraries(hal LINK_PRIVATE lgpio)
 
+find_package(ALSA REQUIRED)
+target_link_libraries(hal LINK_PRIVATE asound)
+
 target_include_directories(hal PUBLIC include)

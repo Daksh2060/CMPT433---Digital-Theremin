@@ -243,3 +243,34 @@ static void *value_thread_func(void *arg)
     }
     return NULL;
 }
+
+//new functions for returning dial parameters.
+//The LCD Needs for writing to screen
+int get_vol(){
+  pthread_mutex_lock(&control_mutex);
+  int vol_ret = volume;
+  pthread_mutex_unlock(&control_mutex);
+  return vol_ret;
+}
+
+
+int get_period(){
+  pthread_mutex_lock(&control_mutex);
+  int period_ret = period;
+  pthread_mutex_unlock(&control_mutex);
+  return period_ret;
+}
+
+int get_waveform(){
+  pthread_mutex_lock(&control_mutex);
+  int waveform_ret = waveform_ret;
+  pthread_mutex_unlock(&control_mutex);
+  return waveform_ret;
+}
+
+int get_brightness(){
+  pthread_mutex_lock(&control_mutex);
+  int brightness_ret = brightness;
+  pthread_mutex_unlock(&control_mutex);
+  return brightness_ret;
+}

@@ -15,12 +15,14 @@ volatile bool exit_theremin_program = false;
 
 void program_manager_init(void)
 {
+    lcd_menu_init();
+
+    
     udp_init();
     distance_sensor_init();
     command_handler_init();
     dial_controls_init();
     button_controls_init();
-    lcd_menu_init();
 }
 
 void program_wait_to_end()

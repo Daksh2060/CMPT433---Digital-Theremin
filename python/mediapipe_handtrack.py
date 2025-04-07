@@ -84,18 +84,24 @@ def main():
     if results.multi_hand_landmarks is not None:
       for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
                                                 results.multi_handedness):
-        # Extract landmarks and draw (Comment out when using on board)
-        brect = calc_bounding_rect(debug_frame, hand_landmarks)
-        landmark_list = calc_landmark_list(debug_frame, hand_landmarks)
+    
         # Gestures determined manually for now
         gesture, bit_value = extract_gesture(hand_landmarks.landmark)
+        #comment this out when running with visualization. This is for sending data to C script on board
+        landmark_list = calc_landmark_list(240, 240, hand_landmarks)
+        flattened_list = landmark_list_to_string(landmark_list)
+        
         #draw bounding box and hand landmarks
-        debug_frame = draw_bounding_rect(use_brect, debug_frame, brect)
-        debug_frame = draw_landmarks(debug_frame, landmark_list)
+        #COMMENT OUT ON BOARD
+        #brect = calc_bounding_rect(debug_frame, hand_landmarks)
+        #landmark_list = calc_landmark_list(debug_frame, hand_landmarks)
+        #debug_frame = draw_bounding_rect(use_brect, debug_frame, brect)
+        #debug_frame = draw_landmarks(debug_frame.shape[1], debug_frame.shape[0], landmark_list)
         
         if previous_gesture != gesture and gesture != "UNKNOWN":
-          print(gesture)
-          send_data(bit_value)
+          combined = f"{bit_value} {flattened_list}"
+          send_data(combined)
+          #send_data(landmark_list_board)
           previous_gesture = gesture
 
     # COMMENT OUT WHEN RUNNING ON BOARD!
@@ -129,6 +135,25 @@ def calc_bounding_rect(image, landmarks):
 def calc_landmark_list(image, landmarks):
     image_width, image_height = image.shape[1], image.shape[0]
 
+    landmark_point = []
+
+    # Keypoint
+    for _, landmark in enumerate(landmarks.landmark):
+        landmark_x = min(int(landmark.x * image_width), image_width - 1)
+        landmark_y = min(int(landmark.y * image_height), image_height - 1)
+        # landmark_z = landmark.z
+
+        landmark_point.append([landmark_x, landmark_y])
+
+    return landmark_point
+
+def landmark_list_to_string(landmark_list):
+    if isinstance(landmark_list, list):
+        flattened = [str(num) for pair in landmark_list for num in pair]
+        return " ".join(flattened)
+
+
+def calc_landmark_list(image_width, image_height, landmarks):
     landmark_point = []
 
     # Keypoint
@@ -354,47 +379,19 @@ class Point:
 
 
 def extract_gesture(landmarks):
+
   #helper function, cal
   def distance(landmark1, landmark2):
     return ((landmark1.x - landmark2.x) ** 2 + (landmark1.y - landmark2.y) ** 2) ** 0.5
   
   #extracting key joints we're going to use
-  wrist = landmarks[0]
   thumb_tip = landmarks[4]
   index_tip = landmarks[8]
   middle_tip = landmarks[12]
   ring_tip = landmarks[16]
   pinky_tip = landmarks[20]
 
-  thumb_base = landmarks[2]
-  index_base = landmarks[5]
-  middle_base = landmarks[9]
-  ring_base = landmarks[13]
-  pinky_base = landmarks[17]
 
-  #get hand size, going to use for normalizing distances
-  palm_height = distance(wrist, middle_base)
-  
-
-  #get centre of palm
-  palm_center_x = (wrist.x + index_base.x + middle_base.x + ring_base.x + pinky_base.x) / 5
-  palm_center_y = (wrist.y + index_base.y + middle_base.y + ring_base.y + pinky_base.y) / 5
-  palm_center = Point(palm_center_x, palm_center_y)
-
-  
-  # Check for open hand
-  open_hand = (
-    # Check that fingers are open and straight
-    distance(index_tip, wrist)  > 1.25 * palm_height and
-    distance(middle_tip, wrist) > 1.25 * palm_height and
-    distance(ring_tip, wrist)   > 1.25 * palm_height and
-    distance(pinky_tip, wrist)  > 1.25 * palm_height and
-    # Check that fingers are spread 
-    distance(index_tip, middle_tip) > 0.25 * palm_height and
-    distance(middle_tip, ring_tip) > 0.25 * palm_height and
-    distance(ring_tip, pinky_tip) > 0.25 * palm_height
-
-  )
 
   # Check for index and thumb touching
   thumb_index = (
@@ -429,22 +426,6 @@ def extract_gesture(landmarks):
       return "OPEN_HAND", "0000"
   else:
       return "FINGER_THUMB", str(touching_fingers)
-#   if open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-#     return "OPEN_HAND", "0000"
-#   if thumb_index and not open_hand and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-#     return "THUMB_INDEX", "1000"
-#   if thumb_middle and not open_hand and not thumb_index and not thumb_ring and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-#     return "THUMB_MIDDLE", "0100"
-#   if thumb_ring and not open_hand and not thumb_index and not thumb_middle and not thumb_pinky and not index_middle_thumb and not fingers_touching:
-#     return "THUMB_RING", "0010"
-#   if thumb_pinky and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not index_middle_thumb and not fingers_touching:
-#     return "THUMB_PINKY", "0001"
-#   if index_middle_thumb and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not fingers_touching:
-#     return "INDEX_MIDDLE_THUMB", "0101"
-#   if fingers_touching and not open_hand and not thumb_index and not thumb_middle and not thumb_ring and not thumb_pinky and not index_middle_thumb:
-#     return "FINGERS_TOUCHING", "Placeholder hehe sorry Dave ;) "
-  #if no gesture can be determined
-  return "UNKNOWN", "UNKNOWN"
 
 
 if __name__=="__main__":

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "hand_commands.h"
 #include "utils.h"
+#include "lcd_menus.h"
 
 #define UDP_PORT 12345
 #define MAX_BUFFER_SIZE 1600 
@@ -76,18 +77,37 @@ static void *udp_listener(void *arg)
 
 static void process_string(const char *cmd) 
 {
-    if (strcasecmp(cmd, prev_cmd) != 0) {
-        strncpy(prev_cmd, cmd, CMD_SIZE - 1);
-        prev_cmd[CMD_SIZE - 1] = '\0';
+    //copy the command, safer for strtok
+    char cmd_copy[strlen(cmd) + 1];
+    strcpy(cmd_copy, cmd);
+    //extract first token
+    int num_tokens = 43; 
+    int token_index = 0;  
+    char *tokens[num_tokens];
+    tokens[token_index] = strtok(cmd_copy, " ");
 
-        //char *endptr;
-        // previously, was just taking the raw 1100 and converting into int
-        // meaning 1100 meant 1100 and not 14
-        int value = binary_string_to_integer(cmd); //strtol(cmd, &endptr, 2);
+    //if its a new command, we parse
+    if (strcasecmp(tokens[0], prev_cmd) != 0) {
+      strncpy(prev_cmd, tokens[0], CMD_SIZE - 1);
+      prev_cmd[CMD_SIZE - 1] = '\0';
 
-        // TODO: sanecheck value?
+      //char *endptr;
+      // previously, was just taking the raw 1100 and converting into int
+      // meaning 1100 meant 1100 and not 14
+      int value = binary_string_to_integer(tokens[0]); //strtol(cmd, &endptr, 2);
+      // TODO: sanecheck value?
+      command_handler_update_current_command(value);
 
-        command_handler_update_current_command(value);
+      //extract hand datapoints
+      int data_points[num_tokens - 1];
+      while(tokens[token_index] != NULL && token_index < num_tokens){
+        token_index++;
+        tokens[token_index] = strtok(NULL, " ");
+      }
+      for(int i = 1; i < num_tokens; i++){
+        data_points[i - 1] = atoi(tokens[i]);
+      }
+      draw_hand_screen(data_points, num_tokens - 1);
     }
 }
 

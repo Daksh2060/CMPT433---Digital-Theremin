@@ -11,10 +11,6 @@ void toggle_mute();
 
 void dial_controls_cleanup();
 
-//included for the LCD thread to retrieve
-int get_vol();
-int get_period();
-int get_waveform();
-int get_brightness();
+
 
 #endif

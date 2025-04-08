@@ -1,6 +1,11 @@
 #ifndef _DIAL_CONTROLS_H_
 #define _DIAL_CONTROLS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdbool.h>
+
 typedef enum
 {
     REST,

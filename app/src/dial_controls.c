@@ -11,6 +11,13 @@ static int period = 50;
 static int waveform = 50;
 static int brightness = 50;
 
+//Printing variables
+static int last_volume = -1;
+static int last_period = -1;
+static int last_waveform = -1;
+static int last_brightness = -1;
+static int last_mute = -1;
+
 static bool exit_thread = false;
 
 static Control current_control = REST;
@@ -164,19 +171,19 @@ static void set_direction()
 
     int direction_change;
 
-    if (y < -50 && (x < 25 && x > -25))
+    if (y < -65 && (x < 40 && x > -40)) //up
     {
         direction_change = VOLUME;
     }
-    else if (y > 50 && (x < 25 && x > -25))
+    else if (y > 65 && (x < 40 && x > -40)) //down
     {
         direction_change = PERIOD;
     }
-    else if (x > 50 && (y < 25 && y > -25))
+    else if (x > 65 && (y < 40 && y > -40)) //right
     {
         direction_change = WAVEFORM;
     }
-    else if (x < -50 && (y < 25 && y > -25))
+    else if (x < -65 && (y < 40 && y > -40)) //left
     {
         direction_change = BRIGHTNESS;
     }
@@ -193,13 +200,24 @@ static void set_direction()
 }
 
 
-static void print_stats(){
 
-    printf("\rVolume: %d | Period: %d | Waveform: %d | Brightness: %d | Mute: %s   ", 
-        volume, period, waveform, brightness, mute ? "ON" : "OFF");
- 
-    fflush(stdout);
+static void print_stats() {
+    if (volume != last_volume || period != last_period || waveform != last_waveform ||
+        brightness != last_brightness || mute != last_mute) {
+
+        printf("\r\033[KVolume: %d | Period: %d | Waveform: %d | Brightness: %d | Mute: %s", 
+            volume, period, waveform, brightness, mute ? "ON" : "OFF");
+        fflush(stdout);
+
+        last_volume = volume;
+        last_period = period;
+        last_waveform = waveform;
+        last_brightness = brightness;
+        last_mute = mute;
+    }
 }
+
+
 
 static void set_value()
 {

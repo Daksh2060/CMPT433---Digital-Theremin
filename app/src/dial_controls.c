@@ -7,15 +7,15 @@
 #include <stdio.h>
   
 static int volume = 50;
-static int period = 50;
+static int octave = 50;
 static int waveform = 50;
-static int brightness = 50;
+static int distortion = 50;
 
 //Printing variables
 static int last_volume = -1;
-static int last_period = -1;
+static int last_octave = -1;
 static int last_waveform = -1;
-static int last_brightness = -1;
+static int last_distortion = -1;
 static int last_mute = -1;
 
 static bool exit_thread = false;
@@ -88,16 +88,16 @@ int get_volume()
     return vol;
 }
 
-int get_period()
+int get_octave()
 {
-    int per;
+    int oct;
     pthread_mutex_lock(&control_mutex);
     {
-        per = period;
+        oct = octave;
     }
     pthread_mutex_unlock(&control_mutex);
 
-    return per;
+    return oct;
 }
 
 int get_waveform()
@@ -112,16 +112,16 @@ int get_waveform()
     return wave;
 }
 
-int get_brightness()
+int get_distortion()
 {
-    int bright;
+    int dist;
     pthread_mutex_lock(&control_mutex);
     {
-        bright = brightness;
+        dist = distortion;
     }
     pthread_mutex_unlock(&control_mutex);
 
-    return bright;
+    return dist;
 }
 
 
@@ -177,7 +177,7 @@ static void set_direction()
     }
     else if (y > 65 && (x < 40 && x > -40)) //down
     {
-        direction_change = PERIOD;
+        direction_change = OCTAVE;
     }
     else if (x > 65 && (y < 40 && y > -40)) //right
     {
@@ -185,7 +185,7 @@ static void set_direction()
     }
     else if (x < -65 && (y < 40 && y > -40)) //left
     {
-        direction_change = BRIGHTNESS;
+        direction_change = DISTORTION;
     }
     else
     {
@@ -202,17 +202,17 @@ static void set_direction()
 
 
 static void print_stats() {
-    if (volume != last_volume || period != last_period || waveform != last_waveform ||
-        brightness != last_brightness || mute != last_mute) {
+    if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
+        distortion != last_distortion || mute != last_mute) {
 
-        printf("\r\033[KVolume: %d | Period: %d | Waveform: %d | Brightness: %d | Mute: %s", 
-            volume, period, waveform, brightness, mute ? "ON" : "OFF");
+        printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %d | Mute: %s", 
+            volume, octave, waveform, distortion, mute ? "ON" : "OFF");
         fflush(stdout);
 
         last_volume = volume;
-        last_period = period;
+        last_octave = octave;
         last_waveform = waveform;
-        last_brightness = brightness;
+        last_distortion = distortion;
         last_mute = mute;
     }
 }
@@ -259,15 +259,15 @@ static void set_value()
         }
     }
 
-    else if (current_state == PERIOD)
+    else if (current_state == OCTAVE)
     {
-        rotary_encoder_set_value(period);
-        while (current_control == PERIOD)
+        rotary_encoder_set_value(octave);
+        while (current_control == OCTAVE)
         {
-            int new_period = rotary_encoder_get_value(&encoder);
-            if (new_period != period)
+            int new_octave = rotary_encoder_get_value(&encoder);
+            if (new_octave != octave)
             {
-                period = new_period;
+                octave = new_octave;
                 sleep_for_ms(10);
             }
             print_stats();
@@ -289,15 +289,15 @@ static void set_value()
         }
     }
 
-    else if (current_state == BRIGHTNESS)
+    else if (current_state == DISTORTION)
     {
-        rotary_encoder_set_value(brightness);
-        while (current_control == BRIGHTNESS)
+        rotary_encoder_set_value(distortion);
+        while (current_control == DISTORTION)
         {
-            int new_brightness = rotary_encoder_get_value(&encoder);
-            if (new_brightness != brightness)
+            int new_distortion = rotary_encoder_get_value(&encoder);
+            if (new_distortion != distortion)
             {
-                brightness = new_brightness;
+                distortion = new_distortion;
                 sleep_for_ms(10);
             }
             print_stats();

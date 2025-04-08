@@ -10,9 +10,9 @@ typedef enum
 {
     REST,
     VOLUME,
-    PERIOD,
+    OCTAVE,
     WAVEFORM,
-    BRIGHTNESS
+    DISTORTION,
 } Control;
 
 
@@ -26,11 +26,11 @@ bool is_mute();
 
 int get_volume();
 
-int get_period();
+int get_octave();
 
 int get_waveform();
 
-int get_brightness();
+int get_distortion();
 
 
 

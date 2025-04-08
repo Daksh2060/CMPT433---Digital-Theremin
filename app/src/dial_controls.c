@@ -113,9 +113,9 @@ int get_waveform()
     return wave;
 }
 
-int get_distortion()
+double get_distortion()
 {
-    int dist;
+    double dist;
     pthread_mutex_lock(&control_mutex);
     {
         dist = distortion;

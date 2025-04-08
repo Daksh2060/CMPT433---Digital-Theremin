@@ -32,7 +32,7 @@ int get_octave();
 
 int get_waveform();
 
-int get_distortion();
+double get_distortion();
 
 
 

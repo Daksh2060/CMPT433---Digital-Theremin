@@ -13,15 +13,6 @@ static int brightness = 50;
 
 static bool exit_thread = false;
 
-typedef enum
-{
-    REST,
-    VOLUME,
-    PERIOD,
-    WAVEFORM,
-    BRIGHTNESS
-} Control;
-
 static Control current_control = REST;
 
 static pthread_t control_thread;
@@ -52,6 +43,81 @@ void dial_controls_init()
         perror("Failed to create value thread");
     }
 }
+
+
+Control get_current_control()
+{
+    Control control;
+    pthread_mutex_lock(&control_mutex);
+    {
+        control = current_control;
+    }
+    pthread_mutex_unlock(&control_mutex);
+
+    return control;
+}
+
+bool is_mute()
+{
+    bool is_muted;
+    pthread_mutex_lock(&control_mutex);
+    {
+        is_muted = mute;
+    }
+    pthread_mutex_unlock(&control_mutex);
+
+    return is_muted;
+}
+
+int get_volume()
+{
+    int vol;
+    pthread_mutex_lock(&control_mutex);
+    {
+        vol = volume;
+    }
+    pthread_mutex_unlock(&control_mutex);
+
+    return vol;
+}
+
+int get_period()
+{
+    int per;
+    pthread_mutex_lock(&control_mutex);
+    {
+        per = period;
+    }
+    pthread_mutex_unlock(&control_mutex);
+
+    return per;
+}
+
+int get_waveform()
+{
+    int wave;
+    pthread_mutex_lock(&control_mutex);
+    {
+        wave = waveform;
+    }
+    pthread_mutex_unlock(&control_mutex);
+
+    return wave;
+}
+
+int get_brightness()
+{
+    int bright;
+    pthread_mutex_lock(&control_mutex);
+    {
+        bright = brightness;
+    }
+    pthread_mutex_unlock(&control_mutex);
+
+    return bright;
+}
+
+
 
 void get_dial_volume(int *vol)
 {

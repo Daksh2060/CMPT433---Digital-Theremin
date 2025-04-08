@@ -10,4 +10,7 @@ void command_handler_update_current_command(int cmd);
 
 void command_handler_cleanup();
 
+int command_handler_getOctave();
+void command_handler_setOctave(int octave);
+
 #endif

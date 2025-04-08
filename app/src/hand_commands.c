@@ -19,6 +19,11 @@
 #define B1110 14
 #define B0111 7 
 #define B1111 15
+#define B1001 9
+#define B0101 5
+#define B1101 13
+
+static int currentOctave = 0;
 
 static volatile int command = -1;       
 static pthread_mutex_t lock;            
@@ -34,25 +39,27 @@ struct digit_to_play_freq {
     int note_offset;
 }; 
 
-#define NUM_COMMANDS 11
+#define NUM_COMMANDS 14
+
+// index, middle, and ring control base notes (white keys)
+// pinky controls sharps (black keys)
 
 static struct digit_to_play_freq commands[] = {
-    // single finger notes
-    {B0000,0}, // this plays a note given an open hand 
-    {B1000,2},
-    {B0100,3},
-    {B0010,5},
-    {B0001,7},
-    // double finger notes
-    {B1100,8},
-    {B0110,10},
-    {B0011,12},
-    // triple finger notes
-    {B1110,14},
-    {B0111,15},
-    // all fingers note
-    {B1111,17}
-};
+    {B0000,-9}, // C
+    {B0001,-8}, // C sharp
+    {B1000,-7}, // D
+    {B1001,-6}, // D sharp 
+    {B0100,-5}, // E
+    {B0101,-4}, // E sharp (F)
+    {B0010,-4}, // F
+    {B0011,-3}, // F sharp
+    {B1100,-2}, // G
+    {B1101,-1}, // G sharp 
+    {B0110,0}, // A 
+    {B0111,1}, // A sharp
+    {B1110,2}, // B
+    {B1111,3}, // B sharp (C)
+}
 
 // function that returns the frequency of a note
 // given its semitone offset from A4
@@ -89,13 +96,22 @@ void command_handler_cleanup()
     SineMixer_cleanup();
 }
 
+int command_handler_getOctave()
+{
+    return currentOctave;
+}
+
+void command_handler_setOctave(int octave)
+{
+    currentOctave = octave;
+}
+
 static void process_command(int cmd) 
 {
-
     // find the member in the struct array that corresponds to cmd
     for(int i = 0; i < NUM_COMMANDS; i++) {
         if(cmd == commands[i].binary) {
-            play_note(note_to_freq(commands[i].note_offset));
+            play_note(note_to_freq((12*currentOctave)+commands[i].note_offset));
         }
     }
 }

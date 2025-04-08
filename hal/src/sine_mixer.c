@@ -9,7 +9,7 @@
 #include <alloca.h> // needed for mixer
 #include <math.h>
 
-#define PI 3.14159265
+#define PI 3.1415926535897932
 
 static snd_pcm_t *handle;
 
@@ -24,8 +24,23 @@ static snd_pcm_t *handle;
 static unsigned long playbackBufferSize = 0;
 static short *playbackBuffer = NULL;
 
+//#define FREQUENCY_CHANGE_RATE 50
+
 // vars to control current frequency playback
+static enum SineMixer_waveform currentWaveform = SINEMIXER_WAVE_SINE;
+static double squareWave(double phase);
+static double triangleWave(double phase);
+static double sawtoothWave(double phase);
+static double stairWave(double phase);
+static double rectifiedSineWave(double phase);
+
+static double decayingSine_timeVar = 0;
+static double decayingSineWave(double phase);
+
+static double frequencyDistortion = 0;
 static double currentFrequency = 0;
+static double desiredFrequency = 0;
+static double frequencyChangeRate = 0;
 static bool isPlaying = false;
 static double phase = 0;
 // Playback threading
@@ -72,23 +87,6 @@ void SineMixer_init(void)
 	pthread_create(&playbackThreadId, NULL, playbackThread, NULL);
 }
 
-void SineMixer_queueFrequency(double frequency)
-{
-    if(frequency == currentFrequency) return;
-    pthread_mutex_lock(&audioMutex);
-    currentFrequency = frequency;
-    isPlaying = true;
-    pthread_mutex_unlock(&audioMutex);
-}
-
-void SineMixer_stopPlayback(void)
-{
-    pthread_mutex_lock(&audioMutex);
-    isPlaying = false;
-    currentFrequency = 0;
-    pthread_mutex_unlock(&audioMutex);
-}
-
 void SineMixer_cleanup(void)
 {
 	// Stop the PCM generation thread
@@ -108,11 +106,65 @@ void SineMixer_cleanup(void)
 	fflush(stdout);
 }
 
-int SineMixer_getVolume()
+void SineMixer_queueFrequency(double frequency)
 {
-	// Return the cached volume; good enough unless someone is changing
-	// the volume through other means and the cached value is out of date.
-	return volume;
+    if(frequency == desiredFrequency) return;
+    pthread_mutex_lock(&audioMutex);
+	{
+		desiredFrequency = frequency;
+		if(currentFrequency == 0) {
+			currentFrequency = desiredFrequency;
+		}
+		isPlaying = true;
+		decayingSine_timeVar = 0;
+	}
+    pthread_mutex_unlock(&audioMutex);
+}
+
+double SineMixer_getFrequency(void)
+{
+	//TODO: maybe return desired frequency instead
+	return desiredFrequency;
+}
+
+void SineMixer_stopPlayback(void)
+{
+    pthread_mutex_lock(&audioMutex);
+    {
+		isPlaying = false;
+		currentFrequency = 0;
+		desiredFrequency = 0;
+	}
+    pthread_mutex_unlock(&audioMutex);
+}
+
+void SineMixer_setWaveform(enum SineMixer_waveform waveform)
+{
+	pthread_mutex_lock(&audioMutex);
+	{
+		currentWaveform = waveform;
+		decayingSine_timeVar = 0;
+	}
+	pthread_mutex_unlock(&audioMutex);
+}
+
+enum SineMixer_waveform Sinemixer_getWaveform(void)
+{
+	return currentWaveform;
+}
+
+void SineMixer_setDistortion(double distortion)
+{
+	pthread_mutex_lock(&audioMutex);
+	{
+		frequencyDistortion = distortion;
+	}
+    pthread_mutex_unlock(&audioMutex);
+}
+
+double SineMixer_getDistortion(void)
+{
+	return frequencyDistortion;
 }
 
 // Function copied from:
@@ -150,18 +202,73 @@ void SineMixer_setVolume(int newVolume)
     snd_mixer_close(mixerHandle);
 }
 
+int SineMixer_getVolume()
+{
+	// Return the cached volume; good enough unless someone is changing
+	// the volume through other means and the cached value is out of date.
+	return volume;
+}
+
+// following functions return a value between -1 and 1 when provided a value between 0 and 2pi
+
+static double squareWave(double phase)
+{
+	return (phase < PI) ? 1.0 : -1.0;
+}
+
+static double triangleWave(double phase)
+{
+	if(phase < PI) {
+		return (2.0*phase/PI) - 1.0;
+	} else {
+		return 1.0 - (2.0*(phase-PI)/PI);
+	}
+}
+
+static double sawtoothWave(double phase)
+{
+	return (phase/PI) - 1.0;
+}
+
+#define STAIRWAVE_NUMSTEPS 6
+static double stairWave(double phase)
+{
+	return floor((phase / (2*PI)) * STAIRWAVE_NUMSTEPS) / STAIRWAVE_NUMSTEPS*2.0-1.0;  
+}
+
+static double rectifiedSineWave(double phase)
+{
+	return fabs(sin(phase));
+}
+
+#define DECAYINGSINE_DECAYRATE 4.0
+static double decayingSineWave(double phase)
+{
+	decayingSine_timeVar += 0.00002;
+	return sin(phase) * exp(-DECAYINGSINE_DECAYRATE * decayingSine_timeVar);
+}
+
 // Fill the buff array with new PCM values to output.
 //    buff: buffer to fill with new PCM data from sound bites.
 //    size: the number of *values* to store into buff
 static void fillPlaybackBuffer(short *buff, int size)
 {
 	memset(buff,0,size * sizeof(short));
-
+	double freq;
+	double distortion;
+	enum SineMixer_waveform waveform;
+	bool playing;
 	pthread_mutex_lock(&audioMutex);
-    double freq = currentFrequency;
-    bool playing = isPlaying;
+    {
+		freq = currentFrequency;
+		distortion = frequencyDistortion;
+		waveform = currentWaveform;
+		playing = isPlaying;
+	}
 	pthread_mutex_unlock(&audioMutex);
-
+	distortion = freq * distortion;
+	freq += (2*distortion)*(rand()/(double)RAND_MAX)-distortion;
+	
     if(!playing || freq <= 0) {
         return; // with an empty buffer
     }
@@ -169,7 +276,33 @@ static void fillPlaybackBuffer(short *buff, int size)
     double phase_increment = 2.0 * PI * freq / SAMPLE_RATE;
 
     for(int i = 0; i < size; i++) {
-        double sample = sin(phase);
+        double sample;
+		switch(waveform) {
+			case SINEMIXER_WAVE_SINE:
+				sample = sin(phase);
+				break;
+			case SINEMIXER_WAVE_SQUARE:
+				sample = squareWave(phase);
+				break;
+			case SINEMIXER_WAVE_TRIANGLE:
+				sample = triangleWave(phase);
+				break;
+			case SINEMIXER_WAVE_SAWTOOTH:
+				sample = sawtoothWave(phase);
+				break;
+			case SINEMIXER_WAVE_STAIRS:
+				sample = stairWave(phase);
+				break;
+			case SINEMIXER_WAVE_RECTIFIED_SINE:
+				sample = rectifiedSineWave(phase);
+				break;
+			case SINEMIXER_WAVE_DECAYING_SINE:
+				sample = decayingSineWave(phase);
+				break;
+			default:
+				sample = 0;
+				break;
+		}
         buff[i] = (short)(sample * 32767);
         phase += phase_increment;
         if(phase >= 2.0 * PI) {
@@ -182,6 +315,22 @@ static void* playbackThread(void* _arg)
 {
 	(void)_arg;
 	while (!stopping) {
+		// incrememt current freq to desired freq
+		if(currentFrequency != desiredFrequency) {
+			// dynamic change rate dependant on the distance between the old and new note.
+			frequencyChangeRate = fabs(currentFrequency - desiredFrequency)/5;
+			// set playing frequency to desired if below threshold
+			// to avoid weird oscillation
+			if(frequencyChangeRate <= 5) {
+				currentFrequency = desiredFrequency;
+			} else if(currentFrequency < desiredFrequency) {
+				currentFrequency += frequencyChangeRate;
+			} else {
+				currentFrequency -= frequencyChangeRate;
+			}
+		}
+		
+
 		// Generate next block of audio
 		fillPlaybackBuffer(playbackBuffer, playbackBufferSize);
 

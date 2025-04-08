@@ -14,19 +14,39 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define LCD_MARGIN_LEFT 5       // Left margin for all text on the display
-#define LCD_FIRST_LINE_Y 70     // Y position where the first line of text starts
-#define LCD_LINE_HEIGHT 20      // Vertical space between each line of text
+#define POPUP_BORDER_WIDTH 3
+#define POPUP_MARGIN_X 50
+#define POPUP_MARGIN_Y 50
 
-
+#define NUM_HAND_KEYPOINTS 42
 //lcd menu initializer
 bool is_initialized = false;
-
 
 // Screen buffer
 static UWORD *s_fb;
 
+// Hand Datapoint Buffer
+static int hand_keypoints[NUM_HAND_KEYPOINTS];
 
+// Thread data
+static pthread_t lcdMenuThreadID;
+static pthread_mutex_t lcd_menu_mutex = PTHREAD_MUTEX_INITIALIZER;
+static void *lcd_menu_thread();
+
+//popup screens
+static void draw_hand_screen(int arr[], int size);
+static void draw_volume_popup();
+static void draw_period_popup();
+static void draw_waveform_popup();
+static void draw_brightness_popup();
+
+void set_keypoint_buff(int new_keyponts[], int size){
+  assert(size == NUM_HAND_KEYPOINTS);
+  pthread_mutex_lock(&lcd_menu_mutex);
+  memcpy(hand_keypoints, new_keyponts, sizeof(int) * size);
+  pthread_mutex_unlock(&lcd_menu_mutex);
+
+}
 
 void lcd_menu_init(){
   assert(!is_initialized);
@@ -46,8 +66,27 @@ void lcd_menu_init(){
       exit(0);
   }
   is_initialized = true;
+  // Create LCD MENU Thread
+  if(pthread_create(&lcdMenuThreadID, NULL, lcd_menu_thread, NULL) != 0){
+    fprintf(stderr, "ERROR: Could not initialize Beat thread");
+    exit(EXIT_FAILURE);
+  }
 
+}
 
+static void *lcd_menu_thread(){
+  assert(is_initialized);
+  while(is_initialized){
+    //copy the buffer to local
+    pthread_mutex_lock(&lcd_menu_mutex);
+    int keypoints[NUM_HAND_KEYPOINTS];
+    memcpy(keypoints, hand_keypoints, sizeof(int) * NUM_HAND_KEYPOINTS);
+    pthread_mutex_unlock(&lcd_menu_mutex);
+    //pass local copy to draw function
+    draw_hand_screen(keypoints, NUM_HAND_KEYPOINTS);
+    sleep_for_ms(100);
+  }
+  pthread_exit(NULL);
 }
 
 void lcd_menu_cleanup(){
@@ -57,13 +96,13 @@ void lcd_menu_cleanup(){
   s_fb = NULL;
   DEV_ModuleExit();
   is_initialized = false;
+  pthread_join(lcdMenuThreadID, NULL);
+  printf("Cleaned LCD Menu Thread\n");
+  
 }
 
-void draw_statistics_screen(){
-  //does nothing
-}
 
-void draw_hand_screen(int points[], int size){
+static void draw_hand_screen(int points[], int size){
   assert(is_initialized);
   assert(size %2 == 0);
   const int joint_radius = 3;
@@ -115,10 +154,54 @@ void draw_hand_screen(int points[], int size){
   Paint_DrawLine(points[38], points[39], points[40], points[41], BLACK, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);//19-20
   
 
+  //get current joystick state. If necessary we draw the corresponding popup ONTOP
+  Control curr_control = get_current_control();
+  switch(curr_control){
+    case REST:
+        break;
+    case VOLUME:
+        draw_volume_popup();
+        break;
+    case PERIOD:
+        draw_period_popup();
+        break;
+    case WAVEFORM:
+        draw_waveform_popup();
+        break;
+    case BRIGHTNESS:
+        draw_brightness_popup();
+        break;
+    default:
+        break;
+  }
+
   LCD_1IN54_Display(s_fb);
-
-
 }
 
+static void draw_volume_popup(){
+  Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+  Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
+  //draw volume text
+}
 
+static void draw_period_popup(){
+  Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+  Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+  //draw period text
+}
+
+static void draw_waveform_popup(){
+  Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+  Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+  //draw waveform text + waveform visualization
+}
+
+static void draw_brightness_popup(){
+  Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+  Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+  //draw brightness text 
+}

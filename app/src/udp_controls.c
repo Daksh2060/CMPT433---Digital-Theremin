@@ -85,6 +85,16 @@ static void process_string(const char *cmd)
     int token_index = 0;  
     char *tokens[num_tokens];
     tokens[token_index] = strtok(cmd_copy, " ");
+     //extract the rest of tokens and copy to integer buffer
+    int data_points[num_tokens - 1];
+    while(tokens[token_index] != NULL && token_index < num_tokens){
+      token_index++;
+      tokens[token_index] = strtok(NULL, " ");
+    }
+    for(int i = 1; i < num_tokens; i++){
+      data_points[i - 1] = atoi(tokens[i]);
+    }
+    set_keypoint_buff(data_points, num_tokens - 1);
 
     //if its a new command, we parse
     if (strcasecmp(tokens[0], prev_cmd) != 0) {
@@ -97,17 +107,6 @@ static void process_string(const char *cmd)
       int value = binary_string_to_integer(tokens[0]); //strtol(cmd, &endptr, 2);
       // TODO: sanecheck value?
       command_handler_update_current_command(value);
-
-      //extract hand datapoints
-      int data_points[num_tokens - 1];
-      while(tokens[token_index] != NULL && token_index < num_tokens){
-        token_index++;
-        tokens[token_index] = strtok(NULL, " ");
-      }
-      for(int i = 1; i < num_tokens; i++){
-        data_points[i - 1] = atoi(tokens[i]);
-      }
-      draw_hand_screen(data_points, num_tokens - 1);
     }
 }
 

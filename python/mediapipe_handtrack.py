@@ -14,13 +14,13 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--device", type=int, default=0)
-    parser.add_argument("--width", help='cap width', type=int, default=640)
-    parser.add_argument("--height", help='cap height', type=int, default=480)
+    parser.add_argument("--width", help='cap width', type=int, default=240)
+    parser.add_argument("--height", help='cap height', type=int, default=240)
     parser.add_argument('--use_static_image_mode', action='store_true')
     parser.add_argument("--min_detection_confidence",
                         help='min_detection_confidence',
                         type=float,
-                        default=0.7)
+                        default=0.5)
     parser.add_argument("--min_tracking_confidence",
                         help='min_tracking_confidence',
                         type=int,
@@ -49,6 +49,7 @@ def main():
   cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')) #comment out if there are any issues
   cap.set(cv2.CAP_PROP_FRAME_WIDTH, cap_width)
   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, cap_height)
+  cap.set(cv2.CAP_PROP_FPS,10) #limit fps, maybe better performance?
   time.sleep(1)
 
   # Load Model 
@@ -61,7 +62,7 @@ def main():
   )
 
   while True:
-    start_latency = time.time()
+    #start_latency = time.time()
     key = cv2.waitKey(10)
     if key == 27:
         break
@@ -71,7 +72,7 @@ def main():
     if not ret:
         break
     frame = cv2.flip(frame, 1)  # Mirror display
-    debug_frame= copy.deepcopy(frame)
+    #debug_frame= copy.deepcopy(frame)
 
     # Detection implementation 
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

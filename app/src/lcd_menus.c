@@ -3,6 +3,7 @@
 #include "LCD_1in54.h"
 #include "GUI_Paint.h"
 #include "GUI_BMP.h"
+#include "fonts.h"
 
 #include "lcd_menus.h"
 #include "utils.h"
@@ -17,6 +18,10 @@
 #define POPUP_BORDER_WIDTH 3
 #define POPUP_MARGIN_X 50
 #define POPUP_MARGIN_Y 50
+#define LCD_MIDPOINT_X (LCD_1IN54_WIDTH / 2)
+#define LCD_MIDPOINT_Y (LCD_1IN54_HEIGHT / 2)
+
+
 
 #define NUM_HAND_KEYPOINTS 42
 //lcd menu initializer
@@ -36,9 +41,9 @@ static void *lcd_menu_thread();
 //popup screens
 static void draw_hand_screen(int arr[], int size);
 static void draw_volume_popup();
-static void draw_period_popup();
+static void draw_octave_popup();
 static void draw_waveform_popup();
-static void draw_brightness_popup();
+static void draw_distortion_popup();
 
 void set_keypoint_buff(int new_keyponts[], int size){
   assert(size == NUM_HAND_KEYPOINTS);
@@ -162,14 +167,14 @@ static void draw_hand_screen(int points[], int size){
     case VOLUME:
         draw_volume_popup();
         break;
-    case PERIOD:
-        draw_period_popup();
+    case OCTAVE:
+        draw_octave_popup();
         break;
     case WAVEFORM:
         draw_waveform_popup();
         break;
-    case BRIGHTNESS:
-        draw_brightness_popup();
+    case DISTORTION:
+        draw_distortion_popup();
         break;
     default:
         break;
@@ -183,13 +188,32 @@ static void draw_volume_popup(){
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
   //draw volume text
+  int volume = get_volume();
+  char *msg = "Volume: ";
+  char msg_buff[20];
+  snprintf(msg_buff, sizeof(msg_buff), "%s%d", msg, volume);
+
+  sFONT font_choice = Font12;
+  int x_offset = LCD_MIDPOINT_X - (font_choice.Width * sizeof(msg_buff) / 2);
+  int y_offset = LCD_MIDPOINT_Y - (font_choice.Height * sizeof(msg_buff) /2);
+
+  Paint_DrawString_EN(x_offset, y_offset, msg_buff, &font_choice, WHITE, BLACK);
 }
 
-static void draw_period_popup(){
+static void draw_octave_popup(){
   Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
   //draw period text
+  int octave = get_octave();
+  char *msg = "Octave: ";
+  char msg_buff[20];
+  snprintf(msg_buff, sizeof(msg_buff), "%s%d", msg, octave);
+
+  sFONT font_choice = Font12;
+  int x_offset = LCD_MIDPOINT_X - (font_choice.Width * sizeof(msg_buff) / 2);
+  int y_offset = LCD_MIDPOINT_Y - (font_choice.Height * sizeof(msg_buff) /2);
+  Paint_DrawString_EN(x_offset, y_offset, msg_buff, &font_choice, WHITE, BLACK);
 }
 
 static void draw_waveform_popup(){
@@ -197,11 +221,22 @@ static void draw_waveform_popup(){
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
   //draw waveform text + waveform visualization
+  
+
 }
 
-static void draw_brightness_popup(){
+static void draw_distortion_popup(){
   Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
-  //draw brightness text 
+  //draw distortion popup
+  int distortion = get_distortion();
+  char *msg = "Distortion: ";
+  char msg_buff[20];
+  snprintf(msg_buff, sizeof(msg_buff), "%s%d", msg, distortion);
+
+  sFONT font_choice = Font12;
+  int x_offset = LCD_MIDPOINT_X - (font_choice.Width * sizeof(msg_buff) / 2);
+  int y_offset = LCD_MIDPOINT_Y - (font_choice.Height * sizeof(msg_buff) /2);
+  Paint_DrawString_EN(x_offset, y_offset, msg_buff, &font_choice, WHITE, BLACK);
 }

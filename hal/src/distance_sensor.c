@@ -6,6 +6,10 @@
 #include <gpiod.h>
 #include <stdbool.h>
 
+//Add refrence to guide
+
+
+
 #define GPIOCHIP1 "/dev/gpiochip1"
 #define GPIOCHIP2 "/dev/gpiochip2"
 #define TRIGGER_PIN 17

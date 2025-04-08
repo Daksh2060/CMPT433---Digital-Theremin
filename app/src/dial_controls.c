@@ -12,11 +12,11 @@ static int waveform = 50;
 static int distortion = 50;
 
 //Printing variables
-static int last_volume = -1;
-static int last_octave = -1;
-static int last_waveform = -1;
-static int last_distortion = -1;
-static int last_mute = -1;
+// static int last_volume = -1;
+// static int last_octave = -1;
+// static int last_waveform = -1;
+// static int last_distortion = -1;
+// static int last_mute = -1;
 
 static bool exit_thread = false;
 
@@ -201,21 +201,21 @@ static void set_direction()
 
 
 
-static void print_stats() {
-    if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
-        distortion != last_distortion || mute != last_mute) {
+// static void print_stats() {
+//     if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
+//         distortion != last_distortion || mute != last_mute) {
 
-        printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %d | Mute: %s", 
-            volume, octave, waveform, distortion, mute ? "ON" : "OFF");
-        fflush(stdout);
+//         printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %d | Mute: %s", 
+//             volume, octave, waveform, distortion, mute ? "ON" : "OFF");
+//         fflush(stdout);
 
-        last_volume = volume;
-        last_octave = octave;
-        last_waveform = waveform;
-        last_distortion = distortion;
-        last_mute = mute;
-    }
-}
+//         last_volume = volume;
+//         last_octave = octave;
+//         last_waveform = waveform;
+//         last_distortion = distortion;
+//         last_mute = mute;
+//     }
+// }
 
 
 

@@ -147,9 +147,7 @@ static void increment_counter()
 {
     pthread_mutex_lock(&counter_mutex);
     {
-        if (counter < 100){
-            counter += 5;
-        }
+        counter += 1;
     }
     pthread_mutex_unlock(&counter_mutex);
 }
@@ -160,7 +158,7 @@ static void decrement_counter()
     pthread_mutex_lock(&counter_mutex);
     {
         if (counter > 0){
-            counter -= 5;
+            counter -= 1;
         }
     }
     pthread_mutex_unlock(&counter_mutex);

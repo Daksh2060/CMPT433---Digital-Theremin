@@ -5,18 +5,20 @@
 #include "sine_mixer.h"
 #include <pthread.h>
 #include <stdio.h>
-  
-static int volume = 50;
-static int octave = 50;
-static int waveform = 50;
-static int distortion = 50;
+#include "sine_mixer.h"
+#include <math.h>
 
-//Printing variables
-// static int last_volume = -1;
-// static int last_octave = -1;
-// static int last_waveform = -1;
-// static int last_distortion = -1;
-// static int last_mute = -1;
+static int volume = 50;
+static int octave = 0;
+static int waveform = 0;
+static double distortion = 0.00;
+
+// Printing variables
+static int last_volume = -1;
+static int last_octave = -1;
+static int last_waveform = -1;
+static int last_distortion = -1;
+static int last_mute = -1;
 
 static bool exit_thread = false;
 
@@ -50,7 +52,6 @@ void dial_controls_init()
         perror("Failed to create value thread");
     }
 }
-
 
 Control get_current_control()
 {
@@ -124,8 +125,6 @@ int get_distortion()
     return dist;
 }
 
-
-
 void get_dial_volume(int *vol)
 {
     pthread_mutex_lock(&control_mutex);
@@ -149,7 +148,7 @@ void toggle_mute()
 {
     pthread_mutex_lock(&control_mutex);
     {
-        mute = !mute; 
+        mute = !mute;
     }
     pthread_mutex_unlock(&control_mutex);
 }
@@ -171,19 +170,19 @@ static void set_direction()
 
     int direction_change;
 
-    if (y < -65 && (x < 40 && x > -40)) //up
+    if (y < -65 && (x < 40 && x > -40)) // up
     {
         direction_change = VOLUME;
     }
-    else if (y > 65 && (x < 40 && x > -40)) //down
+    else if (y > 65 && (x < 40 && x > -40)) // down
     {
         direction_change = OCTAVE;
     }
-    else if (x > 65 && (y < 40 && y > -40)) //right
+    else if (x > 65 && (y < 40 && y > -40)) // right
     {
         direction_change = WAVEFORM;
     }
-    else if (x < -65 && (y < 40 && y > -40)) //left
+    else if (x < -65 && (y < 40 && y > -40)) // left
     {
         direction_change = DISTORTION;
     }
@@ -199,25 +198,23 @@ static void set_direction()
     pthread_mutex_unlock(&control_mutex);
 }
 
+static void print_stats()
+{
+    if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
+        distortion != last_distortion || mute != last_mute)
+    {
 
+        printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %f | Mute: %s",
+               volume, octave, waveform, distortion, mute ? "ON" : "OFF");
+        fflush(stdout);
 
-// static void print_stats() {
-//     if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
-//         distortion != last_distortion || mute != last_mute) {
-
-//         printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %d | Mute: %s", 
-//             volume, octave, waveform, distortion, mute ? "ON" : "OFF");
-//         fflush(stdout);
-
-//         last_volume = volume;
-//         last_octave = octave;
-//         last_waveform = waveform;
-//         last_distortion = distortion;
-//         last_mute = mute;
-//     }
-// }
-
-
+        last_volume = volume;
+        last_octave = octave;
+        last_waveform = waveform;
+        last_distortion = distortion;
+        last_mute = mute;
+    }
+}
 
 static void set_value()
 {
@@ -244,18 +241,24 @@ static void set_value()
             if (is_muted)
             {
                 volume = 0;
-                // print_stats();
+                print_stats();
                 sleep_for_ms(10);
                 continue;
             }
             int new_vol = rotary_encoder_get_value(&encoder);
+
+            if(new_vol > 100)
+            {
+                new_vol = 100;
+                rotary_encoder_set_value(new_vol);
+            }
 
             if (new_vol != volume)
             {
                 volume = new_vol;
                 sleep_for_ms(10);
             }
-            // print_stats();
+            print_stats();
         }
     }
 
@@ -265,12 +268,13 @@ static void set_value()
         while (current_control == OCTAVE)
         {
             int new_octave = rotary_encoder_get_value(&encoder);
+
             if (new_octave != octave)
             {
                 octave = new_octave;
                 sleep_for_ms(10);
             }
-            // print_stats();
+            print_stats();
         }
     }
 
@@ -280,31 +284,42 @@ static void set_value()
         while (current_control == WAVEFORM)
         {
             int new_waveform = rotary_encoder_get_value(&encoder);
+
+            new_waveform = (new_waveform % SINEMIXER_WAVE_COUNT);
+
             if (new_waveform != waveform)
             {
                 waveform = new_waveform;
                 sleep_for_ms(10);
             }
-            // print_stats();
+            print_stats();
         }
     }
 
     else if (current_state == DISTORTION)
     {
-        rotary_encoder_set_value(distortion);
+        int distortion_int = (int)(distortion * 100);
+        rotary_encoder_set_value(distortion_int);
+
         while (current_control == DISTORTION)
         {
-            int new_distortion = rotary_encoder_get_value(&encoder);
-            if (new_distortion != distortion)
+            int new_distortion_int = rotary_encoder_get_value(&encoder);
+
+            if (new_distortion_int > 10)
             {
-                distortion = new_distortion;
-                sleep_for_ms(10);
+                new_distortion_int = 10;
+                rotary_encoder_set_value(new_distortion_int);
             }
-            // print_stats();
+            
+            double new_distortion_scaled = new_distortion_int / 100.0;
+
+            distortion = new_distortion_scaled;
+            sleep_for_ms(10);
+            print_stats();
         }
     }
-    
-    // print_stats();
+
+    print_stats();
     sleep_for_ms(50);
 }
 

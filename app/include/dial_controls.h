@@ -6,6 +6,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#include "sine_mixer.h"
+
 typedef enum
 {
     REST,

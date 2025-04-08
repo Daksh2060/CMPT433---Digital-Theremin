@@ -244,7 +244,7 @@ static void set_value()
             if (is_muted)
             {
                 volume = 0;
-                print_stats();
+                // print_stats();
                 sleep_for_ms(10);
                 continue;
             }
@@ -255,7 +255,7 @@ static void set_value()
                 volume = new_vol;
                 sleep_for_ms(10);
             }
-            print_stats();
+            // print_stats();
         }
     }
 
@@ -270,7 +270,7 @@ static void set_value()
                 octave = new_octave;
                 sleep_for_ms(10);
             }
-            print_stats();
+            // print_stats();
         }
     }
 
@@ -285,7 +285,7 @@ static void set_value()
                 waveform = new_waveform;
                 sleep_for_ms(10);
             }
-            print_stats();
+            // print_stats();
         }
     }
 
@@ -300,11 +300,11 @@ static void set_value()
                 distortion = new_distortion;
                 sleep_for_ms(10);
             }
-            print_stats();
+            // print_stats();
         }
     }
     
-    print_stats();
+    // print_stats();
     sleep_for_ms(50);
 }
 

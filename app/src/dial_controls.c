@@ -301,10 +301,11 @@ static void set_value()
         {
 
             int new_waveform = rotary_encoder_get_value(&encoder);
-            if(new_waveform < 0){
-              new_waveform *= -1;
-            }
             new_waveform = (new_waveform % SINEMIXER_WAVE_COUNT);
+
+            if(new_waveform < 0){
+                new_waveform *= -1;
+            }
 
             if (new_waveform != waveform)
             {

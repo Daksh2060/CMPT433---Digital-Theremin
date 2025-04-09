@@ -18,7 +18,7 @@ static bool isInitialized = false;
 static pthread_t articulatorRunner;
 static void* articulatorRunnerFn(void* args);
 
-#define NUM_SAMPLES 20
+#define NUM_SAMPLES 40
 static int distanceSamples[NUM_SAMPLES];
 static int totalSamples = 0;
 static int averageSample(void);
@@ -52,8 +52,8 @@ void distance_articulator_set_mute(bool isMuted)
     muted = isMuted;
 }
 
-#define MIN_DISTANCE 5
-#define MAX_DISTANCE 30
+#define MIN_DISTANCE 3
+#define MAX_DISTANCE 20
 #define STEEPNESS 0.01
 
 static int dist_to_vol(int distance) 
@@ -65,7 +65,8 @@ static int dist_to_vol(int distance)
         return 0;
     }
     double normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-    double volume = maxVolume*exp(-100*STEEPNESS*normalized_distance);
+    //double volume = maxVolume*exp(-100*STEEPNESS*normalized_distance);
+    double volume = maxVolume*normalized_distance;
     return (int)volume;
 }
 
@@ -84,7 +85,7 @@ static void* articulatorRunnerFn(void* args)
     while(isInitialized) {
         int sample = get_distance();
         // throw away samples above 50cm
-        if(sample <= 50) {
+        if(sample <= MAX_DISTANCE) {
             distanceSamples[totalSamples%NUM_SAMPLES] = sample;
             totalSamples++;
         }

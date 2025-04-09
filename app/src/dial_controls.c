@@ -103,9 +103,9 @@ int get_octave()
     return oct;
 }
 
-int get_waveform()
+enum SineMixer_waveform get_waveform()
 {
-    int wave;
+    enum SineMixer_waveform wave;
     pthread_mutex_lock(&control_mutex);
     {
         wave = waveform;

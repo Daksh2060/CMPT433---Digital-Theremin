@@ -30,7 +30,7 @@ int get_volume();
 
 int get_octave();
 
-int get_waveform();
+enum SineMixer_waveform get_waveform();
 
 double get_distortion();
 

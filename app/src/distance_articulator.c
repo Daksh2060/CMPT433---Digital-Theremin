@@ -64,7 +64,7 @@ static int dist_to_vol(int distance)
     if(distance > MAX_DISTANCE) {
         return 0;
     }
-    double normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+    double normalized_distance = (distance - MIN_DISTANCE) / (double)(MAX_DISTANCE - MIN_DISTANCE);
     //double volume = maxVolume*exp(-100*STEEPNESS*normalized_distance);
     double volume = maxVolume*normalized_distance;
     return (int)volume;

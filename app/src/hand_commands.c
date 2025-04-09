@@ -142,7 +142,7 @@ static double last_note = 0.0;
 static void play_note(double frequency)
 {
     if(frequency != last_note) {
-        printf("frequency: %f\n",frequency);
+        //printf("frequency: %f\n",frequency);
         SineMixer_queueFrequency(frequency);
         last_note = frequency;
     }

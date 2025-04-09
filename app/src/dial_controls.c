@@ -16,11 +16,11 @@ static int waveform = 0;
 static double distortion = 0.00;
 
 // Printing variables
-// static int last_volume = -1;
-// static int last_octave = -1;
-// static int last_waveform = -1;
-// static int last_distortion = -1;
-// static int last_mute = -1;
+static int last_volume = -1;
+static int last_octave = -1;
+static int last_waveform = -1;
+static int last_distortion = -1;
+static int last_mute = -1;
 
 static bool exit_thread = false;
 
@@ -200,23 +200,23 @@ static void set_direction()
     pthread_mutex_unlock(&control_mutex);
 }
 
-// static void print_stats()
-// {
-//     if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
-//         distortion != last_distortion || mute != last_mute)
-//     {
+static void print_stats()
+ {
+     if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
+         distortion != last_distortion || mute != last_mute)
+     {
 
-//         printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %.3f | Mute: %s",
-//             volume, octave, waveform, distortion, mute ? "ON" : "OFF");
-//         fflush(stdout);
+         printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %.3f | Mute: %s",
+             volume, octave, waveform, distortion, mute ? "ON" : "OFF");
+         fflush(stdout);
 
-//         last_volume = volume;
-//         last_octave = octave;
-//         last_waveform = waveform;
-//         last_distortion = distortion;
-//         last_mute = mute;
-//     }
-// }
+         last_volume = volume;
+         last_octave = octave;
+         last_waveform = waveform;
+         last_distortion = distortion;
+         last_mute = mute;
+     }
+}
 
 static void set_value()
 {
@@ -245,7 +245,8 @@ static void set_value()
             if (is_muted)
             {
                 volume = 0;
-                // print_stats();
+                print_stats();
+                distance_articulator_set_volume(volume);
                 sleep_for_ms(10);
                 continue;
             }
@@ -270,7 +271,7 @@ static void set_value()
 
                 sleep_for_ms(10);
             }
-            // print_stats();
+            print_stats();
         }
     }
 
@@ -289,7 +290,7 @@ static void set_value()
 
                 sleep_for_ms(10);
             }
-            // print_stats();
+            print_stats();
         }
     }
 
@@ -298,8 +299,11 @@ static void set_value()
         rotary_encoder_set_value(waveform);
         while (current_control == WAVEFORM)
         {
-            int new_waveform = rotary_encoder_get_value(&encoder);
 
+            int new_waveform = rotary_encoder_get_value(&encoder);
+            if(new_waveform < 0){
+              new_waveform *= -1;
+            }
             new_waveform = (new_waveform % SINEMIXER_WAVE_COUNT);
 
             if (new_waveform != waveform)
@@ -310,7 +314,7 @@ static void set_value()
 
                 sleep_for_ms(10);
             }
-            // print_stats();
+            print_stats();
         }
     }
 
@@ -341,11 +345,11 @@ static void set_value()
             SineMixer_setDistortion(distortion);
 
             sleep_for_ms(10);
-            // print_stats();
+            print_stats();
         }
     }
 
-    // print_stats();
+    print_stats();
     sleep_for_ms(50);
 }
 

@@ -47,9 +47,9 @@ void distance_articulator_set_mute(bool isMuted)
     muted = isMuted;
 }
 
-#define MIN_DISTANCE 1
-#define MAX_DISTANCE 15
-#define STEEPNESS 0.05
+#define MIN_DISTANCE 5
+#define MAX_DISTANCE 30
+#define STEEPNESS 0.01
 
 static int dist_to_vol(int distance) 
 {
@@ -69,9 +69,10 @@ static void* articulatorRunnerFn(void* args)
     (void)args;
     while(isInitialized) {
         if(muted) {
-            SineMixer_setVolume(0);
+            SineMixer_stopPlayback();
         } else {
             int vol = dist_to_vol(get_distance());
+            //printf("%d\n", get_distance());
             SineMixer_setVolume(vol);
         }
         sleep_for_ms(5);

@@ -202,12 +202,12 @@ static void set_direction()
 
 static void print_stats()
  {
-     if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
+    if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
          distortion != last_distortion || mute != last_mute)
-     {
+    {
 
          printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %.3f | Mute: %s",
-             get_volume(), octave, waveform, distortion, mute ? "ON" : "OFF");
+            get_volume(), octave, waveform, distortion, mute ? "ON" : "OFF");
          fflush(stdout);
 
          last_volume = volume;

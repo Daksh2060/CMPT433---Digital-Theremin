@@ -204,8 +204,8 @@ static void print_stats()
         distortion != last_distortion || mute != last_mute)
     {
 
-        printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %f | Mute: %s",
-               volume, octave, waveform, distortion, mute ? "ON" : "OFF");
+        printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %.3f | Mute: %s",
+            volume, octave, waveform, distortion, mute ? "ON" : "OFF");
         fflush(stdout);
 
         last_volume = volume;
@@ -250,6 +250,11 @@ static void set_value()
             if(new_vol > 100)
             {
                 new_vol = 100;
+                rotary_encoder_set_value(new_vol);
+            }
+            else if(new_vol < 0)
+            {
+                new_vol = 0;
                 rotary_encoder_set_value(new_vol);
             }
 
@@ -310,9 +315,14 @@ static void set_value()
                 new_distortion_int = 10;
                 rotary_encoder_set_value(new_distortion_int);
             }
+            else if (new_distortion_int < 0)
+            {
+                new_distortion_int = 0;
+                rotary_encoder_set_value(new_distortion_int);
+            }
             
             double new_distortion_scaled = new_distortion_int / 100.0;
-
+            
             distortion = new_distortion_scaled;
             sleep_for_ms(10);
             print_stats();

@@ -2,6 +2,7 @@
 #include "sine_mixer.h"
 #include "distance_sensor.h"
 #include "utils.h"
+#include "dial_controls.h"
 
 #include <stdbool.h>
 #include <assert.h>
@@ -83,6 +84,7 @@ static void* articulatorRunnerFn(void* args)
 {
     (void)args;
     while(isInitialized) {
+        maxVolume = get_volume();
         int sample = get_distance();
         // throw away samples above 50cm
         if(sample <= MAX_DISTANCE) {

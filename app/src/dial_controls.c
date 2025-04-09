@@ -243,7 +243,7 @@ static void set_value()
             if (is_muted)
             {
                 volume = 0;
-                distance_articulator_set_volume(volume);
+                //distance_articulator_set_volume(volume);
                 print_stats();
                 sleep_for_ms(10);
                 continue;
@@ -266,7 +266,7 @@ static void set_value()
                 volume = new_vol;
                 sleep_for_ms(10);
             }
-            distance_articulator_set_volume(volume);
+            //distance_articulator_set_volume(volume);
             print_stats();
         }
     }

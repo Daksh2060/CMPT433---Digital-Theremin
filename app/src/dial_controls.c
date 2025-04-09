@@ -261,6 +261,9 @@ static void set_value()
             if (new_vol != volume)
             {
                 volume = new_vol;
+
+                //Setter function here
+
                 sleep_for_ms(10);
             }
             // print_stats();
@@ -277,6 +280,9 @@ static void set_value()
             if (new_octave != octave)
             {
                 octave = new_octave;
+
+                //Setter function here
+
                 sleep_for_ms(10);
             }
             // print_stats();
@@ -295,6 +301,9 @@ static void set_value()
             if (new_waveform != waveform)
             {
                 waveform = new_waveform;
+
+                //Setter function here
+
                 sleep_for_ms(10);
             }
             // print_stats();
@@ -324,6 +333,9 @@ static void set_value()
             double new_distortion_scaled = new_distortion_int / 100.0;
             
             distortion = new_distortion_scaled;
+
+            //Setter function here
+
             sleep_for_ms(10);
             // print_stats();
         }

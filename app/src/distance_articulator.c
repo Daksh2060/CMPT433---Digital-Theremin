@@ -53,13 +53,13 @@ void distance_articulator_set_mute(bool isMuted)
 }
 
 #define MIN_DISTANCE 3
-#define MAX_DISTANCE 20
+#define MAX_DISTANCE 50
 #define STEEPNESS 0.01
 
 static int dist_to_vol(int distance) 
 {
     if(distance < MIN_DISTANCE) {
-        return 100;
+        return maxVolume;
     } 
     if(distance > MAX_DISTANCE) {
         return 0;

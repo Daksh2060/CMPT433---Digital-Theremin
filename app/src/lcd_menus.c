@@ -308,10 +308,10 @@ static void draw_distortion_popup(){
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
   //draw distortion popup
-  int distortion = get_distortion();
+  double distortion = get_distortion();
   char *msg = "Distortion: ";
   char msg_buff[20];
-  snprintf(msg_buff, sizeof(msg_buff), "%s%d", msg, distortion);
+  snprintf(msg_buff, sizeof(msg_buff), "%s%.3f", msg, distortion);
 
   sFONT font_choice = Font12;
   int x_offset = LCD_MIDPOINT_X - (strlen(msg_buff) * font_choice.Width / 2);

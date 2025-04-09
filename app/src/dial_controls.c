@@ -264,7 +264,6 @@ static void set_value()
             if (new_vol != volume)
             {
                 volume = new_vol;
-
                 sleep_for_ms(10);
             }
             distance_articulator_set_volume(volume);

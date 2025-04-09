@@ -18,6 +18,11 @@ static bool isInitialized = false;
 static pthread_t articulatorRunner;
 static void* articulatorRunnerFn(void* args);
 
+#define NUM_SAMPLES 20
+static int distanceSamples[NUM_SAMPLES];
+static int totalSamples = 0;
+static int averageSample(void);
+
 void distance_articulator_init(void)
 {   
     assert(!isInitialized);
@@ -51,29 +56,45 @@ void distance_articulator_set_mute(bool isMuted)
 #define MAX_DISTANCE 30
 #define STEEPNESS 0.01
 
-// static int dist_to_vol(int distance) 
-// {
-//     if(distance < MIN_DISTANCE) {
-//         return 100;
-//     } 
-//     if(distance > MAX_DISTANCE) {
-//         return 0;
-//     }
-//     double normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-//     double volume = maxVolume*exp(-100*STEEPNESS*normalized_distance);
-//     return (int)volume;
-// }
+static int dist_to_vol(int distance) 
+{
+    if(distance < MIN_DISTANCE) {
+        return 100;
+    } 
+    if(distance > MAX_DISTANCE) {
+        return 0;
+    }
+    double normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+    double volume = maxVolume*exp(-100*STEEPNESS*normalized_distance);
+    return (int)volume;
+}
+
+static int averageSample(void)
+{
+    int sum = 0;
+    for(int i = 0; i < NUM_SAMPLES; i++) {
+        sum += distanceSamples[i];
+    }
+    return sum/NUM_SAMPLES;
+}
 
 static void* articulatorRunnerFn(void* args)
 {
     (void)args;
     while(isInitialized) {
+        int sample = get_distance();
+        // throw away samples above 50cm
+        if(sample <= 50) {
+            distanceSamples[totalSamples%NUM_SAMPLES] = sample;
+            totalSamples++;
+        }
         if(muted) {
-            SineMixer_stopPlayback();
+            SineMixer_setVolume(0);
         } else {
-            // int vol = dist_to_vol(get_distance());
-            //printf("%d\n", get_distance());
-            SineMixer_setVolume(maxVolume);
+            int distance = averageSample();
+            int vol = dist_to_vol(distance);
+            printf("%d\n", distance);
+            SineMixer_setVolume(vol);
         }
         sleep_for_ms(5);
     }

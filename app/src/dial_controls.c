@@ -207,7 +207,7 @@ static void print_stats()
      {
 
          printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %.3f | Mute: %s",
-             volume, octave, waveform, distortion, mute ? "ON" : "OFF");
+             get_volume(), octave, waveform, distortion, mute ? "ON" : "OFF");
          fflush(stdout);
 
          last_volume = volume;

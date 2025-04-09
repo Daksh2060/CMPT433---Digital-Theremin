@@ -24,10 +24,10 @@ struct stateEvent {
 
 // Struct representing a state in the state machine
 struct state {
-    struct stateEvent A_rising;  // Event for A pin rising edge
-    struct stateEvent B_rising;  // Event for B pin rising edge
-    struct stateEvent A_falling; // Event for A pin falling edge
-    struct stateEvent B_falling; // Event for B pin falling edge
+    struct stateEvent risingA;
+    struct stateEvent fallingA;
+    struct stateEvent risingB;
+    struct stateEvent fallingB;
 };
 
 

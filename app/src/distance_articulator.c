@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <math.h>
 
-#define DEFAULT_VOLUME 80;
+#define DEFAULT_VOLUME 80
 
 static int maxVolume = DEFAULT_VOLUME;
 
@@ -27,7 +27,7 @@ void distance_articulator_init(void)
 
 void distance_articulator_cleanup(void)
 {
-    assert(isInitialized)
+    assert(isInitialized);
     isInitialized = false;
     pthread_join(articulatorRunner,NULL);
 }
@@ -37,9 +37,14 @@ void distance_articulator_set_volume(int volume)
     maxVolume = volume;
 }
 
-void distance_acticulator_get_volume(void)
+int distance_acticulator_get_volume(void)
 {
     return maxVolume;
+}
+
+void distance_articulator_set_mute(bool isMuted)
+{
+    muted = isMuted;
 }
 
 #define MIN_DISTANCE 1
@@ -61,6 +66,7 @@ static int dist_to_vol(int distance)
 
 static void* articulatorRunnerFn(void* args)
 {
+    (void)args;
     while(isInitialized) {
         if(muted) {
             SineMixer_setVolume(0);
@@ -70,4 +76,5 @@ static void* articulatorRunnerFn(void* args)
         }
         sleep_for_ms(5);
     }
+    return NULL;
 }

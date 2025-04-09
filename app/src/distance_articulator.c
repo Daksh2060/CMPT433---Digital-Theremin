@@ -48,21 +48,21 @@ void distance_articulator_set_mute(bool isMuted)
 }
 
 #define MIN_DISTANCE 5
-#define MAX_DISTANCE 60
+#define MAX_DISTANCE 30
 #define STEEPNESS 0.01
 
-static int dist_to_vol(int distance) 
-{
-    if(distance < MIN_DISTANCE) {
-        return 100;
-    } 
-    if(distance > MAX_DISTANCE) {
-        return 0;
-    }
-    double normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-    double volume = maxVolume*normalized_distance;
-    return (int)volume;
-}
+// static int dist_to_vol(int distance) 
+// {
+//     if(distance < MIN_DISTANCE) {
+//         return 100;
+//     } 
+//     if(distance > MAX_DISTANCE) {
+//         return 0;
+//     }
+//     double normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+//     double volume = maxVolume*exp(-100*STEEPNESS*normalized_distance);
+//     return (int)volume;
+// }
 
 static void* articulatorRunnerFn(void* args)
 {
@@ -71,9 +71,9 @@ static void* articulatorRunnerFn(void* args)
         if(muted) {
             SineMixer_stopPlayback();
         } else {
-            int vol = dist_to_vol(get_distance());
+            // int vol = dist_to_vol(get_distance());
             //printf("%d\n", get_distance());
-            SineMixer_setVolume(vol);
+            SineMixer_setVolume(maxVolume);
         }
         sleep_for_ms(5);
     }

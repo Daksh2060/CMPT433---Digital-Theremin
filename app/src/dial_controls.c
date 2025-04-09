@@ -240,13 +240,11 @@ static void set_value()
             }
             pthread_mutex_unlock(&control_mutex);
 
-            distance_articulator_set_mute(is_muted);
-
             if (is_muted)
             {
                 volume = 0;
-                print_stats();
                 distance_articulator_set_volume(volume);
+                print_stats();
                 sleep_for_ms(10);
                 continue;
             }
@@ -267,10 +265,9 @@ static void set_value()
             {
                 volume = new_vol;
 
-                distance_articulator_set_volume(volume);
-
                 sleep_for_ms(10);
             }
+            distance_articulator_set_volume(volume);
             print_stats();
         }
     }

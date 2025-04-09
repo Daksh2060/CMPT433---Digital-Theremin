@@ -94,7 +94,8 @@ static void* articulatorRunnerFn(void* args)
         } else {
             int distance = averageSample();
             int vol = dist_to_vol(distance);
-            printf("%d\n", distance);
+            // printf("%d\n", distance);
+            printf("vol: %d\n", vol);
             SineMixer_setVolume(vol);
         }
         sleep_for_ms(5);

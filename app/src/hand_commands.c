@@ -58,8 +58,8 @@ static struct digit_to_play_freq commands[] = {
     {B0110,0}, // A 
     {B0111,1}, // A sharp
     {B1110,2}, // B
-    {B1111,3}, // B sharp (C)
-}
+    {B1111,3} // B sharp (C)
+};
 
 // function that returns the frequency of a note
 // given its semitone offset from A4
@@ -72,7 +72,6 @@ static void play_note(double freq);
 void command_handler_init() 
 {
     pthread_mutex_init(&lock, NULL);
-    SineMixer_init();
     if (pthread_create(&thread, NULL, command_thread, NULL) != 0) {
         perror("Failed to create command thread");
     }
@@ -93,7 +92,6 @@ void command_handler_cleanup()
     end_thread = true;    
     pthread_join(thread, NULL);       
     pthread_mutex_destroy(&lock);      
-    SineMixer_cleanup();
 }
 
 int command_handler_getOctave()

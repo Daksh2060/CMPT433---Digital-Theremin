@@ -3,9 +3,11 @@
 #include "joystick.h"
 #include "utils.h"
 #include "sine_mixer.h"
-#include <pthread.h>
+#include "distance_articulator.h"
+#include "hand_commands.h"
+
 #include <stdio.h>
-#include "sine_mixer.h"
+#include <pthread.h>
 #include <math.h>
 
 static int volume = 50;
@@ -238,6 +240,8 @@ static void set_value()
             }
             pthread_mutex_unlock(&control_mutex);
 
+            distance_articulator_set_mute(is_muted);
+
             if (is_muted)
             {
                 volume = 0;
@@ -262,7 +266,7 @@ static void set_value()
             {
                 volume = new_vol;
 
-                //Setter function here
+                distance_articulator_set_volume(volume);
 
                 sleep_for_ms(10);
             }
@@ -281,7 +285,7 @@ static void set_value()
             {
                 octave = new_octave;
 
-                //Setter function here
+                command_handler_setOctave(octave);
 
                 sleep_for_ms(10);
             }
@@ -302,7 +306,7 @@ static void set_value()
             {
                 waveform = new_waveform;
 
-                //Setter function here
+                SineMixer_setWaveform(waveform);
 
                 sleep_for_ms(10);
             }
@@ -334,7 +338,7 @@ static void set_value()
             
             distortion = new_distortion_scaled;
 
-            //Setter function here
+            SineMixer_setDistortion(distortion);
 
             sleep_for_ms(10);
             // print_stats();

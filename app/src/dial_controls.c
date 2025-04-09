@@ -278,6 +278,17 @@ static void set_value()
         {
             int new_octave = rotary_encoder_get_value(&encoder);
 
+            if(new_octave > 4)
+            {
+                new_octave = 4;
+                rotary_encoder_set_value(new_octave);
+            }
+            else if(new_octave < -4)
+            {
+                new_octave = -4;
+                rotary_encoder_set_value(new_octave);
+            }
+
             if (new_octave != octave)
             {
                 octave = new_octave;

@@ -1,3 +1,7 @@
+/*
+ * This module is used to interface with the UDP controls.
+ * It allows the user to send and receive UDP packets for communication.
+ */
 
 #ifndef _UDP_CONTROLS_H_
 #define _UDP_CONTROLS_H_
@@ -12,6 +16,7 @@
 
 #define UDP_PORT 12345        // Port used for UDP communication
 #define MAX_BUFFER_SIZE 1600  // Maximum size of the UDP buffer
+
 
 /*
  * Initializes the UDP communication and starts the thread.

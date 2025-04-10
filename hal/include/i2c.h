@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+
 /**
  * Initializes the I2C bus for communication with a specific device.
  * 

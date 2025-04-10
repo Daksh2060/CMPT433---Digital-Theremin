@@ -311,7 +311,7 @@ static void fillPlaybackBuffer(short *buff, int size)
 
         buff[i] = (short)(sample * 32767);
         phase += phase_increment;
-		
+
         if(phase >= 2.0 * PI) {
             phase -= 2.0 * PI;
         }
@@ -339,10 +339,7 @@ static void* playbackThread(void* _arg)
 			}
 		}
 		
-		// Generate next block of audio
 		fillPlaybackBuffer(playbackBuffer, playbackBufferSize);
-
-		// Output the audio
 		snd_pcm_sframes_t frames = snd_pcm_writei(handle,
 				playbackBuffer, playbackBufferSize);
 

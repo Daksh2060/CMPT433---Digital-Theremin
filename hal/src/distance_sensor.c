@@ -1,38 +1,43 @@
-#include <stdio.h>
+/*
+ * This file implements the distance sensor module, which reads distance measurements 
+ * by taking the difference in time between returning echos of a pulse sent out by the sensor.
+ * This moulde is based on the following guide: https://opencoursehub.cs.sfu.ca/bfraser/grav-cms/cmpt433/links/files/2022-student-howtos/RCWL-1601UltrasonicDistanceSensor.pdf
+ */
+
+#include <pthread.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <time.h>
-#include <pthread.h>
 #include <gpiod.h>
-#include <stdbool.h>
+#include <stdio.h>
+#include <time.h>
 
-//Add refrence to guide
+#define GPIOCHIP1 "/dev/gpiochip1" // GPIO chip identifier for the echo pin
+#define GPIOCHIP2 "/dev/gpiochip2" // GPIO chip identifier for the trigger pin
+#define TRIGGER_PIN 17             // GPIO line number for the trigger pin
+#define ECHO_PIN 38                // GPIO line number for the echo pin
 
+#define TIMEOUT_US 30000            // Timeout for echo in microseconds
+#define MAX_DISTANCE 400            // Maximum distance in cm
 
-
-#define GPIOCHIP1 "/dev/gpiochip1"
-#define GPIOCHIP2 "/dev/gpiochip2"
-#define TRIGGER_PIN 17
-#define ECHO_PIN 38
-
-#define TIMEOUT_US 30000
-#define MAX_DISTANCE 400
-
+// GPIO state values
 static const char HIGH = 1;
 static const char LOW = 0;
 
+// Thread control variables
 pthread_t sensor_pulse_thread;
 pthread_t sensor_read_thread;
-
 pthread_mutex_t sensor_mutex = PTHREAD_MUTEX_INITIALIZER;
-int current_distance = 0;
-
 bool pulse_thread_running = true;
 bool read_thread_running = true;
 
+int current_distance = 0;
+
+// GPIO chip and line handles
 struct gpiod_chip *chip1, *chip2;
 struct gpiod_line *trigger, *echo;
 
+// Helper function prototypes
 static void *read_loop(void *arg);
 static int get_distance_cm(struct gpiod_line *echo);
 
@@ -52,7 +57,9 @@ int get_distance()
 {
     int distance;
     pthread_mutex_lock(&sensor_mutex);
-    distance = current_distance;
+    {
+        distance = current_distance;
+    }
     pthread_mutex_unlock(&sensor_mutex);
     return distance;
 }
@@ -64,6 +71,7 @@ void distance_sensor_cleanup()
     pthread_mutex_destroy(&sensor_mutex);
 }
 
+// Function to get distance in cm
 static int get_distance_cm(struct gpiod_line *echo) 
 {
     struct timespec start_time, end_time, current_time;
@@ -79,6 +87,7 @@ static int get_distance_cm(struct gpiod_line *echo)
     
     while (gpiod_line_get_value(echo) == LOW) {
         clock_gettime(CLOCK_MONOTONIC, &current_time);
+
         if ((current_time.tv_sec * 1000000000LL + current_time.tv_nsec) > timeout_ns) {
             return -1;
         }
@@ -91,6 +100,7 @@ static int get_distance_cm(struct gpiod_line *echo)
     
     while (gpiod_line_get_value(echo) == HIGH) {
         clock_gettime(CLOCK_MONOTONIC, &current_time);
+
         if ((current_time.tv_sec * 1000000000LL + current_time.tv_nsec) > timeout_ns) {
             return -1;
         }
@@ -113,13 +123,14 @@ static int get_distance_cm(struct gpiod_line *echo)
     return distance_in_cm;
 }
 
-
+// Thread function to read distance
 static void *read_loop(void *arg) 
 {
     (void)arg; 
     int distance_value;
     
     chip1 = gpiod_chip_open(GPIOCHIP1);
+
     if (!chip1) {
         perror("Failed to open gpiochip1");
         exit(EXIT_FAILURE);
@@ -137,12 +148,14 @@ static void *read_loop(void *arg)
     }
     
     chip2 = gpiod_chip_open(GPIOCHIP2);
+
     if (!chip2) {
         perror("Failed to open gpiochip2");
         exit(EXIT_FAILURE);
     }
     
     trigger = gpiod_chip_get_line(chip2, TRIGGER_PIN);
+    
     if (!trigger) {
         perror("Failed to get Trigger line");
         exit(EXIT_FAILURE);

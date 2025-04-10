@@ -1,41 +1,29 @@
-// a modifed version of the audiomixer from a3
-
-// #include "../include/hal/sine_mixer.h"
+/*
+ * This file implements the sine mixer module, which generates and plays
+ * which is a modified version of the audio mixer from assignment 3.
+ */
 #include "sine_mixer.h"
 #include <alsa/asoundlib.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <limits.h>
-#include <alloca.h> // needed for mixer
+#include <alloca.h>
 #include <math.h>
 
-#define PI 3.1415926535897932
+#define PI 3.1415926535897932		// Pi constant used in sine wave calculations
+#define DEFAULT_VOLUME 80			// Default volume level
+#define SAMPLE_RATE 44100			// Sample rate in Hz
+#define NUM_CHANNELS 1				// Number of audio channels (mono)
+#define SAMPLE_SIZE (sizeof(short)) // Bytes per sample
 
-static snd_pcm_t *handle;
-
-#define DEFAULT_VOLUME 80
-
-#define SAMPLE_RATE 44100
-#define NUM_CHANNELS 1
-#define SAMPLE_SIZE (sizeof(short)) 			// bytes per sample
-// Sample size note: This works for mono files because each sample ("frame') is 1 value.
-// If using stereo files then a frame would be two samples.
-
+// Audio buffer size and playback buffer
 static unsigned long playbackBufferSize = 0;
 static short *playbackBuffer = NULL;
-
-//#define FREQUENCY_CHANGE_RATE 50
+static snd_pcm_t *handle;
 
 // vars to control current frequency playback
 static enum SineMixer_waveform currentWaveform = SINEMIXER_WAVE_SINE;
-static double squareWave(double phase);
-static double triangleWave(double phase);
-static double sawtoothWave(double phase);
-static double stairWave(double phase);
-static double rectifiedSineWave(double phase);
-
 static double decayingSine_timeVar = 0;
-static double decayingSineWave(double phase);
 
 static double frequencyDistortion = 0;
 static double currentFrequency = 0;
@@ -43,13 +31,21 @@ static double desiredFrequency = 0;
 static double frequencyChangeRate = 0;
 static bool isPlaying = false;
 static double phase = 0;
+static int volume = 0;
+
 // Playback threading
-static void* playbackThread(void* arg);
 static _Bool stopping = false;
 static pthread_t playbackThreadId;
 static pthread_mutex_t audioMutex = PTHREAD_MUTEX_INITIALIZER;
+static void* playbackThread(void* arg);
 
-static int volume = 0;
+// Waveform functions
+static double squareWave(double phase);
+static double triangleWave(double phase);
+static double sawtoothWave(double phase);
+static double stairWave(double phase);
+static double rectifiedSineWave(double phase);
+static double decayingSineWave(double phase);
 
 void SineMixer_init(void)
 {
@@ -87,25 +83,6 @@ void SineMixer_init(void)
 	pthread_create(&playbackThreadId, NULL, playbackThread, NULL);
 }
 
-void SineMixer_cleanup(void)
-{
-	// Stop the PCM generation thread
-	stopping = true;
-	pthread_join(playbackThreadId, NULL);
-
-	// Shutdown the PCM output, allowing any pending sound to play out (drain)
-	snd_pcm_drain(handle);
-	snd_pcm_close(handle);
-
-	// Free playback buffer
-	// (note that any wave files read into wavedata_t records must be freed
-	//  in addition to this by calling AudioMixer_freeWaveFileData() on that struct.)
-	free(playbackBuffer);
-	playbackBuffer = NULL;
-
-	fflush(stdout);
-}
-
 void SineMixer_queueFrequency(double frequency)
 {
     if(frequency == desiredFrequency) return;
@@ -123,7 +100,6 @@ void SineMixer_queueFrequency(double frequency)
 
 double SineMixer_getFrequency(void)
 {
-	//TODO: maybe return desired frequency instead
 	return desiredFrequency;
 }
 
@@ -209,6 +185,25 @@ int SineMixer_getVolume()
 	return volume;
 }
 
+void SineMixer_cleanup(void)
+{
+	// Stop the PCM generation thread
+	stopping = true;
+	pthread_join(playbackThreadId, NULL);
+
+	// Shutdown the PCM output, allowing any pending sound to play out (drain)
+	snd_pcm_drain(handle);
+	snd_pcm_close(handle);
+
+	// Free playback buffer
+	// (note that any wave files read into wavedata_t records must be freed
+	// in addition to this by calling AudioMixer_freeWaveFileData() on that struct.)
+	free(playbackBuffer);
+	playbackBuffer = NULL;
+
+	fflush(stdout);
+}
+
 // following functions return a value between -1 and 1 when provided a value between 0 and 2pi
 
 static double squareWave(double phase)
@@ -220,7 +215,8 @@ static double triangleWave(double phase)
 {
 	if(phase < PI) {
 		return (2.0*phase/PI) - 1.0;
-	} else {
+	} 
+	else {
 		return 1.0 - (2.0*(phase-PI)/PI);
 	}
 }
@@ -277,34 +273,45 @@ static void fillPlaybackBuffer(short *buff, int size)
 
     for(int i = 0; i < size; i++) {
         double sample;
+
 		switch(waveform) {
+
 			case SINEMIXER_WAVE_SINE:
 				sample = sin(phase);
 				break;
+
 			case SINEMIXER_WAVE_SQUARE:
 				sample = squareWave(phase);
 				break;
+
 			case SINEMIXER_WAVE_TRIANGLE:
 				sample = triangleWave(phase);
 				break;
+
 			case SINEMIXER_WAVE_SAWTOOTH:
 				sample = sawtoothWave(phase);
 				break;
+
 			case SINEMIXER_WAVE_STAIRS:
 				sample = stairWave(phase);
 				break;
+
 			case SINEMIXER_WAVE_RECTIFIED_SINE:
 				sample = rectifiedSineWave(phase);
 				break;
+
 			case SINEMIXER_WAVE_DECAYING_SINE:
 				sample = decayingSineWave(phase);
 				break;
+
 			default:
 				sample = 0;
 				break;
 		}
+
         buff[i] = (short)(sample * 32767);
         phase += phase_increment;
+		
         if(phase >= 2.0 * PI) {
             phase -= 2.0 * PI;
         }
@@ -323,14 +330,15 @@ static void* playbackThread(void* _arg)
 			// to avoid weird oscillation
 			if(frequencyChangeRate <= 5) {
 				currentFrequency = desiredFrequency;
-			} else if(currentFrequency < desiredFrequency) {
+			} 
+			else if(currentFrequency < desiredFrequency) {
 				currentFrequency += frequencyChangeRate;
-			} else {
+			} 
+			else {
 				currentFrequency -= frequencyChangeRate;
 			}
 		}
 		
-
 		// Generate next block of audio
 		fillPlaybackBuffer(playbackBuffer, playbackBufferSize);
 

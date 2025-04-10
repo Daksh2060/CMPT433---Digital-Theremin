@@ -68,7 +68,8 @@
     "complex": "c",
     "lcd_menus.h": "c",
     "dial_controls.h": "c",
-    "sine_mixer.h": "c"
+    "sine_mixer.h": "c",
+    "pthread.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

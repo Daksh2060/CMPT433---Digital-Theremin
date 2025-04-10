@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <time.h>
 
-
 // Pin configuration for the rotary encoder channels
 //   $ gpiofind GPIO24
 //   >> gpiochip0 10
@@ -48,52 +47,42 @@ static void rotary_encoder_do_state();
 // Array of each state transition based on A/B rising/falling edges
 static struct state states[] = {
     {
-        // rotaryState 0: IDLE
         .risingA = {&states[0], NULL},
         .fallingA = {&states[4], NULL},
         .risingB = {&states[0], NULL},
         .fallingB = {&states[1], NULL},
-        //Falling A and Falling B decide which loop we go into from IDLE. If falling B we start the loop for CCW
-        //if falling A we start the loop for CW
-        //ive labelled the left hand loop for falling B as B and the right hand loop for falling A as A   
     },
     {
-        // rotaryState 1: B (1,0)
         .risingA = {&states[1], NULL},
         .fallingA = {&states[2], NULL},
         .risingB = {&states[0], NULL},
         .fallingB = {&states[1], NULL},   
     },
     {
-        // rotaryState 2: B (0,0)
         .risingA = {&states[1], NULL},
         .fallingA = {&states[2], NULL},
         .risingB = {&states[3], NULL},
         .fallingB = {&states[2], NULL},
     },
     {
-        // rotaryState 3: B (0,1)
         .risingA = {&states[0], decrement_counter},
         .fallingA = {&states[3], NULL},
         .risingB = {&states[3], NULL},
         .fallingB = {&states[2], NULL},
     },
     {
-        // rotaryState 4: A (0,1)
         .risingA = {&states[0], NULL},
         .fallingA = {&states[4], NULL},
         .risingB = {&states[4], NULL},
         .fallingB = {&states[5], NULL},
     },
     {
-        // rotaryState 5: A (0,0)
         .risingA = {&states[6], NULL},
         .fallingA = {&states[5], NULL},
         .risingB = {&states[4], NULL},
         .fallingB = {&states[5], NULL},
     },
     {
-        // rotaryState 6: A (1,0)
         .risingA = {&states[6], NULL},
         .fallingA = {&states[5], NULL},
         .risingB = {&states[0], increment_counter},

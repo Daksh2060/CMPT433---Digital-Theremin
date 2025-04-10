@@ -397,21 +397,21 @@ def extract_gesture(landmarks):
   # Check for index and thumb touching
   thumb_index = (
     # Checks that index and thumb are touching
-    distance(thumb_tip, index_tip) < 0.1
+    distance(thumb_tip, index_tip) < 0.15
     # checks that other fingers are open
   )
   # Middle finger and thumb touching
   thumb_middle = (
-    distance(thumb_tip, middle_tip) < 0.1 
+    distance(thumb_tip, middle_tip) < 0.15
   )
   # Ring finger and thumb touching 
   thumb_ring = (
-    distance(thumb_tip, ring_tip) < 0.1
+    distance(thumb_tip, ring_tip) < 0.15
   )
 
   # Pinky and thumb touching
   thumb_pinky = (
-    distance(thumb_tip, pinky_tip) < 0.1 
+    distance(thumb_tip, pinky_tip) < 0.15
   )
 
   bit_index = 0b1000 if thumb_index else 0b0000

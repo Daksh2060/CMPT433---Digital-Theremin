@@ -109,7 +109,10 @@ static void process_command(int cmd)
     // find the member in the struct array that corresponds to cmd
     for(int i = 0; i < NUM_COMMANDS; i++) {
         if(cmd == commands[i].binary) {
-            play_note(note_to_freq((12*currentOctave)+commands[i].note_offset));
+            double frequency = note_to_freq((12*currentOctave)+commands[i].note_offset);
+            // printf("freq:%f\n",frequency);
+            
+            play_note(frequency);
         }
     }
 }

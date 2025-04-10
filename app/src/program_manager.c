@@ -35,10 +35,10 @@ void program_wait_to_end()
 
 void program_manager_cleanup(void)
 {
+    udp_cleanup();
     button_controls_cleanup();
     dial_controls_cleanup();
     gpio_cleanup();
-    udp_cleanup();
     distance_articulator_cleanup();
     distance_sensor_cleanup();
     command_handler_cleanup();

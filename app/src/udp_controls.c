@@ -122,9 +122,11 @@ void udp_cleanup(void)
 static int binary_string_to_integer(const char* str) 
 {
     int out = 0;
+    int len = 3;
+    //printf("len: %d\n", len);
     for(int i = 0; str[i] != '\0'; i++) {
-        // TODO: possible check for if the str is actually in binary or not.
-        out = out * 2 + (str[i] - '0');
+        out = out | ((str[i] - '0') << (len - i));
     }
-    return out;
+    //printf("binary conversion: in:%s, out:%d\n",str,atoi(str));
+    return atoi(str);
 }

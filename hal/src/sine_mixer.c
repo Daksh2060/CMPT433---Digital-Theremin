@@ -323,6 +323,7 @@ static void fillplayback_buffer(short *buff, int size)
 	}
 }
 
+// Thread function that continuously plays audio
 static void *playbackThread(void *_arg)
 {
 	(void)_arg;

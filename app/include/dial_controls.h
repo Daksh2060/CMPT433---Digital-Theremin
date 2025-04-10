@@ -1,4 +1,4 @@
-/* 
+/*
  * This module is used to interface with the dial controls. Allows the user to
  * change the volume, octave, waveform, and distortion of the sound using the joystick
  * and rotary encoder.
@@ -43,7 +43,7 @@ Control get_current_control();
 void toggle_mute();
 
 
-/** 
+/**
  * This function tells users if the device is muted or not.
  * @return True if the device is muted, false otherwise.
  */
@@ -68,7 +68,7 @@ int get_octave();
  * This function retrieves the current waveform type.
  * @return The current waveform type.
  */
-enum SineMixer_waveform get_waveform();
+enum SineMixerWaveform get_waveform();
 
 
 /**

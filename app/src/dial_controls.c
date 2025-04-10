@@ -108,9 +108,9 @@ int get_octave()
     return oct;
 }
 
-enum SineMixer_waveform get_waveform()
+enum SineMixerWaveform get_waveform()
 {
-    enum SineMixer_waveform wave;
+    enum SineMixerWaveform wave;
     pthread_mutex_lock(&control_mutex);
     {
         wave = waveform;
@@ -202,11 +202,11 @@ static void set_direction()
 // Helper function to print the current stats to terminal
 static void print_stats()
 {
-    if(volume != last_volume || octave != last_octave || waveform != last_waveform ||
+    if (volume != last_volume || octave != last_octave || waveform != last_waveform ||
         distortion != last_distortion || mute != last_mute){
 
         printf("\r\033[KVolume: %d | Octave: %d | Waveform: %d | Distortion: %.3f | Mute: %s",
-        get_volume(), octave, waveform, distortion, mute ? "ON" : "OFF");
+            get_volume(), octave, waveform, distortion, mute ? "ON" : "OFF");
         fflush(stdout);
 
         last_volume = volume;
@@ -246,11 +246,11 @@ static void set_value()
             }
             int new_vol = rotary_encoder_get_value(&encoder);
 
-            if(new_vol > 100){
+            if (new_vol > 100){
                 new_vol = 100;
                 rotary_encoder_set_value(new_vol);
             }
-            else if(new_vol < 0){
+            else if (new_vol < 0){
                 new_vol = 0;
                 rotary_encoder_set_value(new_vol);
             }
@@ -269,11 +269,11 @@ static void set_value()
         while (current_control == OCTAVE){
             int new_octave = rotary_encoder_get_value(&encoder);
 
-            if(new_octave > 4){
+            if (new_octave > 4){
                 new_octave = 4;
                 rotary_encoder_set_value(new_octave);
             }
-            else if(new_octave < -4){
+            else if (new_octave < -4){
                 new_octave = -4;
                 rotary_encoder_set_value(new_octave);
             }
@@ -294,13 +294,13 @@ static void set_value()
             int new_waveform = rotary_encoder_get_value(&encoder);
             new_waveform = (new_waveform % SINEMIXER_WAVE_COUNT);
 
-            if(new_waveform < 0){
+            if (new_waveform < 0){
                 new_waveform *= -1;
             }
 
             if (new_waveform != waveform){
                 waveform = new_waveform;
-                SineMixer_setWaveform(waveform);
+                sine_mixer_set_waveform(waveform);
                 sleep_for_ms(10);
             }
             print_stats();
@@ -322,10 +322,10 @@ static void set_value()
                 new_distortion_int = 0;
                 rotary_encoder_set_value(new_distortion_int);
             }
-            
+
             double new_distortion_scaled = new_distortion_int / 100.0;
             distortion = new_distortion_scaled;
-            SineMixer_setDistortion(distortion);
+            sine_mixer_set_distortion(distortion);
 
             sleep_for_ms(10);
             print_stats();

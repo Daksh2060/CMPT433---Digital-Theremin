@@ -1,6 +1,6 @@
 /*
  * This file implements the LCD menus module, handling the display of various menus
- * and visualzing the hand tracking data on the LCD screen. 
+ * and visualzing the hand tracking data on the LCD screen.
  */
 
 #include "DEV_Config.h"
@@ -17,13 +17,15 @@
 #include <assert.h>
 #include <stdio.h>
 
+// Screen dimension constants
 #define POPUP_BORDER_WIDTH 3
 #define POPUP_MARGIN_X 50
 #define POPUP_MARGIN_Y 50
 #define LCD_MIDPOINT_X (LCD_1IN54_WIDTH / 2)
 #define LCD_MIDPOINT_Y (LCD_1IN54_HEIGHT / 2)
 
-#define NUM_HAND_KEYPOINTS 42
+#define NUM_HAND_KEYPOINTS 42 // Number of keypoints in the hand tracking data
+
 // lcd menu initializer
 bool is_initialized = false;
 
@@ -65,7 +67,7 @@ void lcd_menu_init()
     exit(0);
   }
   is_initialized = true;
- 
+
   if (pthread_create(&lcdMenuThreadID, NULL, lcd_menu_thread, NULL) != 0){
     fprintf(stderr, "ERROR: Could not initialize Beat thread");
     exit(EXIT_FAILURE);
@@ -95,6 +97,7 @@ static void *lcd_menu_thread()
 {
   assert(is_initialized);
   while (is_initialized){
+
     int keypoints[NUM_HAND_KEYPOINTS];
     pthread_mutex_lock(&lcd_menu_mutex);
     {
@@ -118,12 +121,12 @@ static void draw_hand_screen(int points[], int size)
   Paint_Clear(BLACK);
 
   // draw joint points on scree
-  for (int i = 0; i < size - 1; i += 2)
-  {
+  for (int i = 0; i < size - 1; i += 2){
+
     int x = points[i];
     int y = points[i + 1];
-    if (x > 0 && x < LCD_1IN54_WIDTH && y > 0 && y < LCD_1IN54_HEIGHT)
-    {
+
+    if (x > 0 && x < LCD_1IN54_WIDTH && y > 0 && y < LCD_1IN54_HEIGHT){
       Paint_DrawCircle(x, y, joint_radius, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     }
   }
@@ -164,24 +167,23 @@ static void draw_hand_screen(int points[], int size)
 
   // get current joystick state. If necessary we draw the corresponding popup ONTOP
   Control curr_control = get_current_control();
-  switch (curr_control)
-  {
-  case REST:
-    break;
-  case VOLUME:
-    draw_volume_popup();
-    break;
-  case OCTAVE:
-    draw_octave_popup();
-    break;
-  case WAVEFORM:
-    draw_waveform_popup();
-    break;
-  case DISTORTION:
-    draw_distortion_popup();
-    break;
-  default:
-    break;
+  switch (curr_control){
+    case REST:
+      break;
+    case VOLUME:
+      draw_volume_popup();
+      break;
+    case OCTAVE:
+      draw_octave_popup();
+      break;
+    case WAVEFORM:
+      draw_waveform_popup();
+      break;
+    case DISTORTION:
+      draw_distortion_popup();
+      break;
+    default:
+      break;
   }
 
   LCD_1IN54_Display(s_fb);
@@ -247,10 +249,9 @@ static void draw_waveform_popup()
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
   // Draw waveform text + waveform visualization
-  enum SineMixer_waveform waveform = get_waveform();
+  enum SineMixerWaveform waveform = get_waveform();
 
-  switch (waveform)
-  {
+  switch (waveform){
     case SINEMIXER_WAVE_SINE:
       draw_wave("SINE WAVE");
       break;

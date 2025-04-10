@@ -22,7 +22,7 @@ volatile bool exit_theremin_program = false;
 
 void program_manager_init(void)
 {
-    SineMixer_init();
+    sine_mixer_init();
     lcd_menu_init();
     udp_init();
     distance_sensor_init();
@@ -34,7 +34,7 @@ void program_manager_init(void)
 
 void program_wait_to_end()
 {
-    while (exit_theremin_program == false) {
+    while (exit_theremin_program == false){
         sleep_for_ms(111);
     }
 }
@@ -49,5 +49,5 @@ void program_manager_cleanup(void)
     distance_sensor_cleanup();
     command_handler_cleanup();
     lcd_menu_cleanup();
-    SineMixer_cleanup();
+    sine_mixer_cleanup();
 }

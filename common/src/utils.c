@@ -3,25 +3,19 @@
  */
 
 #include "utils.h"
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
-#include <assert.h>
-#include <fcntl.h>
+#include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
 #include <linux/i2c.h>
-#include <linux/i2c-dev.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
-#include <time.h>
-#include <stdbool.h>
 #include <pthread.h>
-#include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <string.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <time.h>
+
 
 void sleep_for_ms(long long delay_in_ms)
 {
@@ -75,8 +69,7 @@ long long get_time_in_ns(void)
 void trim_newline(char *str)
 {
     size_t len = strlen(str);
-    if (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r'))
-    {
+    if (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r')){
         str[len - 1] = '\0';
     }
 }
@@ -84,8 +77,7 @@ void trim_newline(char *str)
 void write_string_to_file(char *fileName, char *input)
 {
     FILE *pFile = fopen(fileName, "w");
-    if (pFile == NULL)
-    {
+    if (pFile == NULL){
         printf("ERROR: Unable to open export file.\n");
         exit(1);
     }
@@ -96,8 +88,7 @@ void write_string_to_file(char *fileName, char *input)
 int get_data_from_file(char *fileName)
 {
     FILE *pFile = fopen(fileName, "r");
-    if (pFile == NULL)
-    {
+    if (pFile == NULL){
         printf("ERROR: Unable to open file (%s) for read\n", fileName);
         exit(-1);
     }
@@ -113,8 +104,7 @@ void write_int_to_file(char *fileName, int input)
 {
     FILE *pFile = fopen(fileName, "w");
 
-    if (pFile == NULL)
-    {
+    if (pFile == NULL){
         printf("ERROR: Unable to open export file.\n");
         exit(1);
     }

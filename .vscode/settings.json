@@ -69,7 +69,11 @@
     "lcd_menus.h": "c",
     "dial_controls.h": "c",
     "sine_mixer.h": "c",
-    "pthread.h": "c"
+    "pthread.h": "c",
+    "stdint.h": "c",
+    "utils.h": "c",
+    "time.h": "c",
+    "assert.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

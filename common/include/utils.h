@@ -6,8 +6,8 @@
 #define _UTILS_H_
 
 #include <stdbool.h>
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
 
 /**
  * Pauses the program for a number of milliseconds.
@@ -56,10 +56,31 @@ long long get_time_in_ns(void);
  */
 void trim_newline(char *str);
 
+
+/**
+ * Write a string to a file.
+ *
+ * @param fileName The name of the file to write to.
+ * @param input The string to write to the file.
+ */
 void write_string_to_file(char *fileName, char *input);
 
+
+/**
+ * Read an integer from a file.
+ *
+ * @param fileName The name of the file to read from.
+ * @return The integer read from the file.
+ */
 int get_data_from_file(char *fileName);
 
+
+/**
+ * Write an integer to a file.
+ *
+ * @param fileName The name of the file to write to.
+ * @param input The integer to write to the file.
+ */
 void write_int_to_file(char *fileName, int input);
 
 #endif

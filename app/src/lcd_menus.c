@@ -1,19 +1,21 @@
-#include "lcd_menus.h"
+/*
+ * This file implements the LCD menus module, handling the display of various menus
+ * and visualzing the hand tracking data on the LCD screen. 
+ */
+
 #include "DEV_Config.h"
 #include "LCD_1in54.h"
 #include "GUI_Paint.h"
 #include "GUI_BMP.h"
 #include "fonts.h"
-
+#include "dial_controls.h"
 #include "lcd_menus.h"
 #include "utils.h"
-#include "dial_controls.h"
-
-#include <stdio.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 #define POPUP_BORDER_WIDTH 3
 #define POPUP_MARGIN_X 50
@@ -36,13 +38,39 @@ static pthread_t lcdMenuThreadID;
 static pthread_mutex_t lcd_menu_mutex = PTHREAD_MUTEX_INITIALIZER;
 static void *lcd_menu_thread();
 
-// popup screens
+// Helper function for each popup screen
 static void draw_hand_screen(int arr[], int size);
 static void draw_volume_popup();
 static void draw_octave_popup();
 static void draw_waveform_popup();
 static void draw_distortion_popup();
 static void draw_wave(char *wave);
+
+void lcd_menu_init()
+{
+  assert(!is_initialized);
+  if (DEV_ModuleInit() != 0){
+    DEV_ModuleExit();
+    exit(0);
+  }
+
+  DEV_Delay_ms(2000);
+  LCD_1IN54_Init(HORIZONTAL);
+  LCD_1IN54_Clear(BLACK);
+  LCD_SetBacklight(1023);
+  UDOUBLE Imagesize = LCD_1IN54_HEIGHT * LCD_1IN54_WIDTH * 2;
+
+  if ((s_fb = (UWORD *)malloc(Imagesize)) == NULL){
+    perror("Failed to apply for WHITE memory");
+    exit(0);
+  }
+  is_initialized = true;
+ 
+  if (pthread_create(&lcdMenuThreadID, NULL, lcd_menu_thread, NULL) != 0){
+    fprintf(stderr, "ERROR: Could not initialize Beat thread");
+    exit(EXIT_FAILURE);
+  }
+}
 
 void set_keypoint_buff(int new_keyponts[], int size)
 {
@@ -52,64 +80,34 @@ void set_keypoint_buff(int new_keyponts[], int size)
   pthread_mutex_unlock(&lcd_menu_mutex);
 }
 
-void lcd_menu_init()
+void lcd_menu_cleanup()
 {
-  assert(!is_initialized);
-  // initialize LCD
-  if (DEV_ModuleInit() != 0)
-  {
-    DEV_ModuleExit();
-    exit(0);
-  }
-  // LCD Init
-  DEV_Delay_ms(2000);
-  LCD_1IN54_Init(HORIZONTAL);
-  LCD_1IN54_Clear(BLACK);
-  LCD_SetBacklight(1023);
-  UDOUBLE Imagesize = LCD_1IN54_HEIGHT * LCD_1IN54_WIDTH * 2;
-  if ((s_fb = (UWORD *)malloc(Imagesize)) == NULL)
-  {
-    perror("Failed to apply for WHITE memory");
-    exit(0);
-  }
-  is_initialized = true;
-  // Create LCD MENU Thread
-  if (pthread_create(&lcdMenuThreadID, NULL, lcd_menu_thread, NULL) != 0)
-  {
-    fprintf(stderr, "ERROR: Could not initialize Beat thread");
-    exit(EXIT_FAILURE);
-  }
+  assert(is_initialized);
+  free(s_fb);
+  s_fb = NULL;
+  DEV_ModuleExit();
+  is_initialized = false;
+  pthread_join(lcdMenuThreadID, NULL);
 }
 
+// Thread function that continuously updates the LCD screen
 static void *lcd_menu_thread()
 {
   assert(is_initialized);
-  while (is_initialized)
-  {
-    // copy the buffer to local
-    pthread_mutex_lock(&lcd_menu_mutex);
+  while (is_initialized){
     int keypoints[NUM_HAND_KEYPOINTS];
-    memcpy(keypoints, hand_keypoints, sizeof(int) * NUM_HAND_KEYPOINTS);
+    pthread_mutex_lock(&lcd_menu_mutex);
+    {
+      memcpy(keypoints, hand_keypoints, sizeof(int) * NUM_HAND_KEYPOINTS);
+    }
     pthread_mutex_unlock(&lcd_menu_mutex);
-    // pass local copy to draw function
     draw_hand_screen(keypoints, NUM_HAND_KEYPOINTS);
     sleep_for_ms(100);
   }
   pthread_exit(NULL);
 }
 
-void lcd_menu_cleanup()
-{
-  assert(is_initialized);
-  // clean lcd memory
-  free(s_fb);
-  s_fb = NULL;
-  DEV_ModuleExit();
-  is_initialized = false;
-  pthread_join(lcdMenuThreadID, NULL);
-  printf("Cleaned LCD Menu Thread\n");
-}
-
+// Function to draw the volume popup
 static void draw_hand_screen(int points[], int size)
 {
   assert(is_initialized);
@@ -189,6 +187,7 @@ static void draw_hand_screen(int points[], int size)
   LCD_1IN54_Display(s_fb);
 }
 
+// Function to draw the volume popup
 static void draw_volume_popup()
 {
   Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
@@ -207,12 +206,12 @@ static void draw_volume_popup()
   Paint_DrawString_EN(x_offset, y_offset, msg_buff, &font_choice, BLACK, WHITE);
 }
 
+// Function to draw the octave popup
 static void draw_octave_popup()
 {
   Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
-  // draw period text
   int octave = get_octave();
   char *msg = "Octave: ";
   char msg_buff[20];
@@ -224,9 +223,9 @@ static void draw_octave_popup()
   Paint_DrawString_EN(x_offset, y_offset, msg_buff, &font_choice, BLACK, WHITE);
 }
 
+// Function to draw the waveform popup
 static void draw_wave(char *wave)
 {
-
   char msg_buff[20];
   sFONT font_choice = Font12;
 
@@ -241,12 +240,13 @@ static void draw_wave(char *wave)
   Paint_DrawString_EN(x_offset, y_offset, msg_buff, &font_choice, BLACK, WHITE);
 }
 
+// Function to draw the waveform visualization
 static void draw_waveform_popup()
 {
   Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
-  // draw waveform text + waveform visualization
+  // Draw waveform text + waveform visualization
   enum SineMixer_waveform waveform = get_waveform();
 
   switch (waveform)
@@ -284,12 +284,12 @@ static void draw_waveform_popup()
   }
 }
 
+// Function to draw the waveform visualization
 static void draw_distortion_popup()
 {
   Paint_DrawRectangle(POPUP_MARGIN_X - POPUP_BORDER_WIDTH, POPUP_MARGIN_Y - POPUP_BORDER_WIDTH, LCD_1IN54_WIDTH - POPUP_MARGIN_X + POPUP_BORDER_WIDTH, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y + POPUP_BORDER_WIDTH, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
   Paint_DrawRectangle(POPUP_MARGIN_X, POPUP_MARGIN_Y, LCD_1IN54_WIDTH - POPUP_MARGIN_X, LCD_1IN54_HEIGHT - POPUP_MARGIN_Y, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
-  // draw distortion popup
   double distortion = get_distortion();
   char *msg = "Distortion: ";
   char msg_buff[20];

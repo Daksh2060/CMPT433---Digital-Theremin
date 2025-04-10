@@ -73,7 +73,14 @@
     "stdint.h": "c",
     "utils.h": "c",
     "time.h": "c",
-    "assert.h": "c"
+    "assert.h": "c",
+    "distance_sensor.h": "c",
+    "button_controls.h": "c",
+    "distance_articulator.h": "c",
+    "lcd_1in54.h": "c",
+    "math.h": "c",
+    "joystick.h": "c",
+    "rotary_encoder.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

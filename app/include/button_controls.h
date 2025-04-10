@@ -1,7 +1,6 @@
 /*
  * This module is used to interface with the button controls.
- * It allows users to mute and unmute the device using the rotary button,
- * and turn off the device using the joystick button.
+ * It allows users to mute and unmute the device using the rotary button.
  */
 
 #ifndef _BUTTON_CONTROLS_H_
